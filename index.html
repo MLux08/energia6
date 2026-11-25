@@ -1,0 +1,2654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Misión Energía - Repaso Tema 4 (Conocimiento del Medio)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jsPDF para generación real de PDF descargable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Google Fonts: Fredoka y Nunito para un estilo educativo vibrante y legible -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --electric-yellow: #FFD60A;
+      --cyan-spark: #00B4D8;
+      --mint-eco: #06D6A0;
+      --royal-purple: #7209B7;
+      --coral-alert: #EF476F;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(circle at 10% 20%, #e0f7fa 0%, #f3e8ff 45%, #fef9c3 100%);
+      min-height: 100vh;
+      color: #1e293b;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, .font-display {
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    /* Botones estilo arcade / aventura educativa */
+    .btn-3d {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 5px 0 rgba(15, 23, 42, 0.22);
+    }
+    .btn-3d:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 rgba(15, 23, 42, 0.22);
+    }
+    .btn-3d:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 rgba(15, 23, 42, 0.22);
+    }
+    .btn-3d:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Animaciones suaves */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
+    }
+    .animate-float {
+      animation: floatSlow 3.5s ease-in-out infinite;
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.92) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-pop {
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 10, 0.7); }
+      50% { box-shadow: 0 0 0 10px rgba(255, 214, 10, 0); }
+    }
+    .pulse-target {
+      animation: pulseGlow 1.8s infinite;
+    }
+
+    /* Estilos de impresión de respaldo */
+    @media print {
+      body { background: white !important; }
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-yellow-300 selection:text-slate-900">
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div id="app" class="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+    <!-- BARRA SUPERIOR DE ESTADO (Visible durante el juego) -->
+    <header id="top-hud" class="hidden no-print mb-5 bg-white/95 backdrop-blur-md border-2 border-indigo-200 rounded-3xl p-3 sm:p-4 shadow-lg">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- Alumno y botón mapa -->
+        <div class="flex items-center gap-3">
+          <button onclick="showMapScreen()" title="Volver al mapa de niveles" class="btn-3d bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold px-3 py-2 rounded-2xl text-sm flex items-center gap-1.5">
+            <span>🗺️</span>
+            <span class="hidden sm:inline">Mapa</span>
+          </button>
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-indigo-500">Explorador/a de la Energía</div>
+            <div id="hud-student-name" class="font-display font-bold text-slate-800 text-base sm:text-lg leading-tight truncate max-w-[180px] sm:max-w-[260px]">Alumno/a</div>
+          </div>
+        </div>
+
+        <!-- Progreso del nivel actual -->
+        <div id="hud-level-info" class="flex-1 min-w-[160px] max-w-xs mx-auto">
+          <div class="flex justify-between text-xs font-extrabold text-slate-600 mb-1">
+            <span id="hud-level-title">Nivel 1</span>
+            <span id="hud-question-counter">1 / 10</span>
+          </div>
+          <div class="w-full h-3.5 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300">
+            <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-yellow-400 rounded-full transition-all duration-300" style="width: 10%"></div>
+          </div>
+        </div>
+
+        <!-- Puntuación -->
+        <div class="flex items-center gap-2 bg-gradient-to-r from-amber-300 to-yellow-400 border-2 border-amber-500 px-4 py-2 rounded-2xl shadow-sm">
+          <span class="text-xl">⚡</span>
+          <div>
+            <div class="text-[10px] font-extrabold uppercase text-amber-900 leading-none">Puntos</div>
+            <div id="hud-score" class="font-display font-bold text-slate-900 text-lg sm:text-xl leading-none">0</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA 1: INICIO Y REGISTRO DEL ALUMNO/A                          -->
+    <!-- =================================================================== -->
+    <section id="screen-start" class="animate-pop">
+      <div class="bg-white/95 backdrop-blur rounded-[2rem] border-4 border-indigo-500 shadow-2xl overflow-hidden">
+        <!-- Cabecera decorativa con SVG -->
+        <div class="bg-gradient-to-r from-purple-700 via-indigo-600 to-cyan-500 p-6 sm:p-10 text-white relative overflow-hidden">
+          <!-- Decoración geométrica de fondo -->
+          <svg class="absolute right-4 top-2 w-40 h-40 opacity-20 animate-float pointer-events-none" viewBox="0 0 200 200" fill="none">
+            <circle cx="100" cy="100" r="80" stroke="#FFD60A" stroke-width="12" stroke-dasharray="20 12"/>
+            <path d="M110 25L55 110H100L90 175L145 90H100L110 25Z" fill="#FFD60A"/>
+          </svg>
+
+          <div class="inline-flex items-center gap-2 bg-yellow-400 text-slate-900 font-extrabold text-xs sm:text-sm px-4 py-1.5 rounded-full mb-4 shadow">
+            <span>⚡</span> CONOCIMIENTO DEL MEDIO · TEMA 4 (SANTILLANA)
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-bold tracking-tight mb-3 drop-shadow">
+            ¡Laboratorio de la Energía!
+          </h1>
+          <p class="text-cyan-100 text-base sm:text-xl max-w-2xl font-semibold">
+            Supera los 5 niveles de entrenamiento científico, domina los circuitos y el transporte eléctrico, ¡y consigue tu diploma oficial con todos tus resultados!
+          </p>
+        </div>
+
+        <!-- Cuerpo de la pantalla de inicio -->
+        <div class="p-6 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-5">
+            <div class="bg-amber-50 border-2 border-amber-300 rounded-3xl p-5">
+              <label for="student-name-input" class="block font-display text-lg sm:text-xl font-bold text-slate-800 mb-2">
+                🧑‍🔬 Escribe tu nombre y apellidos para empezar:
+              </label>
+              <input
+                type="text"
+                id="student-name-input"
+                placeholder="Ej. Lucía García Martín"
+                class="w-full text-lg font-bold px-4 py-3.5 rounded-2xl border-2 border-indigo-300 focus:border-purple-600 focus:outline-none focus:ring-4 focus:ring-purple-200 bg-white text-slate-900"
+                onkeydown="if(event.key==='Enter') startAdventure()"
+              />
+              <p id="name-error-msg" class="hidden text-rose-600 font-bold text-sm mt-2">
+                ⚠️ ¡Eh, científico/a! Necesitamos tu nombre y apellidos para firmar tu informe PDF final.
+              </p>
+            </div>
+
+            <!-- Insignias de dificultad -->
+            <div class="grid grid-cols-3 gap-2 sm:gap-3 text-center">
+              <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+                <div class="text-xs font-extrabold uppercase text-emerald-700">Fácil</div>
+                <div class="font-display font-bold text-lg sm:text-xl text-emerald-600">+10 pts</div>
+              </div>
+              <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3">
+                <div class="text-xs font-extrabold uppercase text-amber-700">Media</div>
+                <div class="font-display font-bold text-lg sm:text-xl text-amber-600">+20 pts</div>
+              </div>
+              <div class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3">
+                <div class="text-xs font-extrabold uppercase text-purple-700">Reto / Esquema</div>
+                <div class="font-display font-bold text-lg sm:text-xl text-purple-600">+30 pts</div>
+              </div>
+            </div>
+
+            <button onclick="startAdventure()" class="btn-3d w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-slate-950 font-display font-bold text-xl sm:text-2xl py-4 px-6 rounded-2xl border-2 border-emerald-700 flex items-center justify-center gap-3">
+              <span>🚀</span>
+              <span>¡Comenzar Misión Energía!</span>
+            </button>
+          </div>
+
+          <!-- Tarjeta presentación de la maestra -->
+          <div class="lg:col-span-5 bg-gradient-to-b from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-3xl p-5 text-center space-y-3">
+            <div class="w-24 h-24 mx-auto bg-white rounded-full border-4 border-purple-400 shadow-md flex items-center justify-center overflow-hidden">
+              <!-- Avatar SVG de la maestra -->
+              <svg viewBox="0 0 120 120" class="w-full h-full">
+                <circle cx="60" cy="60" r="58" fill="#F3E8FF"/>
+                <!-- Pelo -->
+                <path d="M25 58 C25 25, 95 25, 95 58 L98 95 C98 102, 22 102, 22 95 Z" fill="#5C3A21"/>
+                <!-- Mechón canoso simpático -->
+                <path d="M36 32 C42 26, 48 30, 44 42" stroke="#E2E8F0" stroke-width="4" stroke-linecap="round" fill="none"/>
+                <!-- Cara -->
+                <ellipse cx="60" cy="62" rx="26" ry="30" fill="#FDE2C4"/>
+                <!-- Gafas -->
+                <rect x="38" y="52" width="18" height="13" rx="5" fill="none" stroke="#7209B7" stroke-width="3"/>
+                <rect x="64" y="52" width="18" height="13" rx="5" fill="none" stroke="#7209B7" stroke-width="3"/>
+                <line x1="56" y1="58" x2="64" y2="58" stroke="#7209B7" stroke-width="3"/>
+                <!-- Ojos -->
+                <circle cx="47" cy="58.5" r="2.5" fill="#1E293B"/>
+                <circle cx="73" cy="58.5" r="2.5" fill="#1E293B"/>
+                <!-- Sonrisa -->
+                <path d="M50 74 Q60 83 70 74" stroke="#E11D48" stroke-width="3" stroke-linecap="round" fill="none"/>
+                <!-- Blusa -->
+                <path d="M30 115 C32 95, 88 95, 90 115 Z" fill="#00B4D8"/>
+              </svg>
+            </div>
+            <div class="inline-block bg-purple-600 text-white text-xs font-extrabold px-3 py-1 rounded-full">
+              TU MAESTRA TE ACOMPAÑA
+            </div>
+            <p class="text-slate-700 font-bold text-sm sm:text-base italic">
+              «¡Hola clase! Tenéis 50 retos sobre la energía. Leed despacio cada opción... ¡que no quiero que me salga otra cana ni tener que decir eso de "Diosito, llévame pronto"! ¡A por todas!»
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA 2: MAPA DE LOS 5 NIVELES DEL TEMA                          -->
+    <!-- =================================================================== -->
+    <section id="screen-map" class="hidden animate-pop space-y-6">
+      <div class="bg-white/95 rounded-3xl border-2 border-indigo-200 p-5 sm:p-7 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">🗺️ Ruta de Niveles · Tema 4</h2>
+            <p class="text-slate-600 font-semibold">Completa los 5 apartados del tema para desbloquear tu informe final en PDF.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-finish-early" onclick="showFinalReport()" class="hidden btn-3d bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-display font-bold px-5 py-3 rounded-2xl border-2 border-amber-600 text-sm sm:text-base">
+              🏆 Ver Informe y Descargar PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de 5 niveles -->
+        <div id="levels-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Se rellena dinámicamente -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA 3: ZONA DE JUEGO / RETO INTERACTIVO                        -->
+    <!-- =================================================================== -->
+    <section id="screen-game" class="hidden animate-pop space-y-5">
+      <div class="bg-white/95 rounded-[2rem] border-4 border-indigo-400 shadow-2xl p-4 sm:p-8">
+        <!-- Encabezado de la pregunta -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b-2 border-slate-100">
+          <div class="flex items-center gap-2">
+            <span id="q-type-badge" class="bg-indigo-100 text-indigo-800 font-extrabold text-xs sm:text-sm px-3.5 py-1.5 rounded-full">
+              Tipo de reto
+            </span>
+            <span id="q-difficulty-badge" class="font-extrabold text-xs sm:text-sm px-3.5 py-1.5 rounded-full">
+              Fácil · +10 pts
+            </span>
+          </div>
+          <div class="text-xs sm:text-sm font-bold text-slate-500" id="q-topic-label">
+            Apartado 1
+          </div>
+        </div>
+
+        <!-- Enunciado principal -->
+        <h3 id="q-prompt" class="font-display text-xl sm:text-2xl font-bold text-slate-900 mb-5 leading-snug">
+          Enunciado de la pregunta...
+        </h3>
+
+        <!-- Contenedor dinámico según el tipo de actividad -->
+        <div id="q-interactive-area" class="space-y-4">
+          <!-- Aquí se inyecta: Test, Emparejar SVG, Etiquetar Dibujo, Huecos, Esquema 5 opciones, Ordenar proceso -->
+        </div>
+
+        <!-- Botón de comprobación para actividades multi-paso -->
+        <div id="q-action-bar" class="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <button id="btn-reset-activity" onclick="resetCurrentInteractive()" class="hidden btn-3d bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-3 rounded-2xl text-sm">
+            🔄 Reiniciar selección
+          </button>
+          <button id="btn-submit-answer" onclick="validateCurrentQuestion()" class="hidden btn-3d ml-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-display font-bold text-lg px-7 py-3.5 rounded-2xl border-2 border-indigo-900">
+            ✅ Comprobar respuesta
+          </button>
+        </div>
+
+        <!-- FEEDBACK Y COMENTARIO DE LA MAESTRA -->
+        <div id="teacher-feedback-box" class="hidden mt-6 rounded-3xl p-4 sm:p-5 border-4 animate-pop">
+          <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+            <!-- Avatar expresivo de la maestra -->
+            <div id="teacher-avatar-container" class="w-20 h-20 shrink-0 rounded-full border-4 bg-white shadow-md overflow-hidden flex items-center justify-center">
+              <!-- SVG dinámico según acierto o fallo -->
+            </div>
+            <div class="flex-1 text-center sm:text-left">
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
+                <span id="feedback-status-pill" class="font-display font-bold text-sm px-3 py-0.5 rounded-full uppercase">
+                  ¡Correcto!
+                </span>
+                <span id="feedback-points-pill" class="font-extrabold text-sm text-slate-700">
+                  +10 puntos
+                </span>
+              </div>
+              <p id="teacher-comment-text" class="font-display font-bold text-lg sm:text-xl text-slate-900 mb-1.5">
+                Comentario de la maestra
+              </p>
+              <p id="feedback-explanation-text" class="text-sm sm:text-base font-semibold text-slate-700 bg-white/70 rounded-2xl p-3 border border-slate-200">
+                Explicación pedagógica del concepto.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex justify-end">
+            <button id="btn-next-question" onclick="nextQuestion()" class="btn-3d bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-display font-bold text-lg px-7 py-3 rounded-2xl border-2 border-emerald-700 flex items-center gap-2">
+              <span>Siguiente reto</span>
+              <span>➡️</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA 4: MODAL DE 5 OPCIONES PARA ESQUEMAS CONCEPTUALES          -->
+    <!-- =================================================================== -->
+    <div id="schema-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl border-4 border-purple-500 max-w-lg w-full p-6 shadow-2xl animate-pop">
+        <div class="flex items-center justify-between mb-3">
+          <span class="bg-purple-100 text-purple-800 font-extrabold text-xs px-3 py-1 rounded-full">
+            ESQUEMA INTERACTIVO · ELIGE UNA OPCIÓN
+          </span>
+          <button onclick="closeSchemaModal()" class="text-slate-400 hover:text-slate-700 font-bold text-xl px-2">✕</button>
+        </div>
+        <h4 id="schema-modal-title" class="font-display font-bold text-xl text-slate-900 mb-4">
+          ¿Qué concepto corresponde a este hueco del esquema?
+        </h4>
+        <div id="schema-modal-options" class="space-y-2.5">
+          <!-- 5 botones de opciones -->
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA 5: INFORME FINAL Y GENERACIÓN DE PDF                       -->
+    <!-- =================================================================== -->
+    <section id="screen-report" class="hidden animate-pop space-y-6">
+      <div class="bg-white rounded-[2rem] border-4 border-amber-400 shadow-2xl overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 p-6 sm:p-9 text-white text-center relative">
+          <div class="text-5xl mb-2">🏆⚡🎓</div>
+          <h2 class="text-3xl sm:text-4xl font-bold mb-1">¡Misión Completada!</h2>
+          <p id="report-student-subtitle" class="text-amber-200 font-bold text-lg sm:text-xl">
+            Informe oficial de resultados
+          </p>
+        </div>
+
+        <div class="p-6 sm:p-8 space-y-6">
+          <!-- Tarjetas de resumen numérico -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-center">
+            <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4">
+              <div class="text-xs font-extrabold uppercase text-amber-800">Puntuación Total</div>
+              <div id="rep-total-score" class="font-display font-bold text-2xl sm:text-3xl text-amber-600">0 / 0</div>
+            </div>
+            <div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4">
+              <div class="text-xs font-extrabold uppercase text-emerald-800">Aciertos</div>
+              <div id="rep-correct-count" class="font-display font-bold text-2xl sm:text-3xl text-emerald-600">0</div>
+            </div>
+            <div class="bg-rose-50 border-2 border-rose-300 rounded-2xl p-4">
+              <div class="text-xs font-extrabold uppercase text-rose-800">Fallos</div>
+              <div id="rep-wrong-count" class="font-display font-bold text-2xl sm:text-3xl text-rose-600">0</div>
+            </div>
+            <div class="bg-indigo-50 border-2 border-indigo-300 rounded-2xl p-4">
+              <div class="text-xs font-extrabold uppercase text-indigo-800">Nota Final</div>
+              <div id="rep-grade" class="font-display font-bold text-2xl sm:text-3xl text-indigo-600">0.0</div>
+            </div>
+          </div>
+
+          <!-- Valoración final de la maestra -->
+          <div id="rep-teacher-summary" class="bg-purple-50 border-2 border-purple-300 rounded-3xl p-5 flex flex-col sm:flex-row items-center gap-4">
+            <div class="text-4xl">👩‍🏫</div>
+            <div>
+              <div class="font-display font-bold text-purple-900 text-lg">Valoración de tu maestra:</div>
+              <p id="rep-teacher-quote" class="text-slate-800 font-semibold"></p>
+            </div>
+          </div>
+
+          <!-- Botones de descarga PDF e impresión -->
+          <div class="no-print flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <button onclick="downloadPDFReport()" class="btn-3d w-full sm:w-auto bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-display font-bold text-lg sm:text-xl px-8 py-4 rounded-2xl border-2 border-red-800 flex items-center justify-center gap-3">
+              <span>📄</span>
+              <span>Descargar Informe en PDF</span>
+            </button>
+            <button onclick="window.print()" class="btn-3d w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-base px-6 py-4 rounded-2xl border-2 border-slate-300 flex items-center justify-center gap-2">
+              <span>🖨️</span>
+              <span>Imprimir / Guardar respaldo</span>
+            </button>
+            <button onclick="showMapScreen()" class="btn-3d w-full sm:w-auto bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold text-base px-6 py-4 rounded-2xl border-2 border-indigo-300">
+              🗺️ Volver a los niveles
+            </button>
+          </div>
+
+          <!-- Desglose detallado de aciertos y fallos -->
+          <div class="pt-4">
+            <h3 class="font-display font-bold text-xl sm:text-2xl text-slate-900 mb-4">
+              📋 Registro detallado de preguntas, aciertos y fallos
+            </h3>
+            <div id="report-details-list" class="space-y-4">
+              <!-- Se genera dinámicamente por niveles -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- LÓGICA DE DATOS (50+ ACTIVIDADES DEL TEMA 4) Y MOTOR DEL JUEGO        -->
+  <!-- ===================================================================== -->
+  <script>
+    // =========================================================================
+    // 1. BANCO DE COMENTARIOS DE LA MAESTRA (ACIERTOS Y FALLOS PERSONALIZADOS)
+    // =========================================================================
+    const TEACHER_PRAISES = [
+      "¡Brillante! Se nota que has estudiado muchísimo este tema.",
+      "¡Así se hace! Menudo chute de energía positiva me acabas de dar.",
+      "¡Genial! Vas directo a por el sobresaliente en Conocimiento del Medio.",
+      "¡Fantástico! Dominas la energía como un auténtico científico.",
+      "¡Chapó! Ni una sola duda, respuesta de matrícula de honor.",
+      "¡Olé! Así da gusto dar clase, ¡qué orgullo de alumnado!"
+    ];
+
+    const TEACHER_ROASTS = [
+      "¡Ay, Diosito, llévame pronto! Repasa bien ese concepto que lo vimos en clase...",
+      "Creo que me acaba de salir otra cana con esa respuesta... ¡fíjate bien en la explicación!",
+      "¡Madre mía, me van a salir canas verdes! Lee despacio la pista y quédate con el dato.",
+      "¡Diosito, dame paciencia! Esa era una pregunta trampa del tema, toma buena nota.",
+      "¡Uff, otra cana más para mi colección! No pasa nada, de los fallos también se aprende.",
+      "¡Diosito, llévame pronto! Casi aciertas, pero te has liado con otro concepto de la energía."
+    ];
+
+    // =========================================================================
+    // 2. DEFINICIÓN DE LOS 5 NIVELES Y SUS 50 PREGUNTAS (10 POR APARTADO)
+    //    Tipos soportados:
+    //    - 'mcq': Elección múltiple (opciones equilibradas, orden alterno)
+    //    - 'match': Unir con flechas SVG (4 parejas)
+    //    - 'fill': Completar huecos en un texto con palabras del tema
+    //    - 'schema': Completar un esquema conceptual pulsando nodos (5 opciones por nodo)
+    //    - 'order': Ordenar fases de un proceso energético o explicar secuencia
+    //    - 'diagram': Etiquetar dibujos SVG (Circuito eléctrico / Transporte eléctrico)
+    // =========================================================================
+    const LEVELS_DATA = [
+      // -----------------------------------------------------------------------
+      // NIVEL 1: ¿QUÉ ES LA ENERGÍA? (10 preguntas)
+      // -----------------------------------------------------------------------
+      {
+        id: 1,
+        title: "¿Qué es la energía?",
+        subtitle: "Formas y propiedades de la energía",
+        icon: "⚡",
+        color: "from-amber-400 to-orange-500",
+        border: "border-amber-500",
+        questions: [
+          {
+            id: "1-1",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Qué es exactamente la energía en la naturaleza?",
+            options: [
+              "La capacidad que tienen los cuerpos para producir cambios a su alrededor.",
+              "La cantidad de materia sólida que ocupa un cuerpo en el espacio.",
+              "La fuerza magnética que únicamente poseen los metales conductores.",
+              "El calor interno que desprenden los combustibles al quemarse."
+            ],
+            correctIndex: 0,
+            explanation: "La energía es la capacidad de producir cambios en los cuerpos: moverlos, calentarlos, iluminarlos o cambiar su estado."
+          },
+          {
+            id: "1-2",
+            type: "match",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Une con flechas cada ejemplo con la forma de energía que manifiesta:",
+            pairs: [
+              { left: "Un patinador bajando una cuesta", right: "Energía mecánica" },
+              { left: "La luz de una linterna encendida", right: "Energía luminosa" },
+              { left: "El calor que desprende una estufa", right: "Energía térmica" },
+              { left: "La energía guardada en los alimentos", right: "Energía química" }
+            ],
+            explanation: "El movimiento tiene energía mecánica; la luz, luminosa; el calor, térmica; y los alimentos o pilas guardan energía química."
+          },
+          {
+            id: "1-3",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Qué forma de energía poseen los cuerpos debido a su movimiento o a la altura a la que se encuentran?",
+            options: [
+              "Energía sonora.",
+              "Energía térmica.",
+              "Energía mecánica.",
+              "Energía química."
+            ],
+            correctIndex: 2,
+            explanation: "La energía mecánica es la que tienen los cuerpos que están en movimiento (como el viento o un coche) o elevados."
+          },
+          {
+            id: "1-4",
+            type: "fill",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Completa las propiedades fundamentales de la energía arrastrando o pulsando las palabras:",
+            textParts: [
+              "La energía no se crea ni se destruye, sino que se ",
+              ". Además, puede pasar de un cuerpo a otro, es decir, se ",
+              ", y también se puede llevar de un lugar a otro porque se ",
+              "."
+            ],
+            blanks: ["transforma", "transfiere", "transporta"],
+            wordBank: ["transforma", "transfiere", "transporta", "agota", "destruye"],
+            explanation: "Las cuatro propiedades básicas de la energía son: se transforma, se transfiere, se transporta y se almacena."
+          },
+          {
+            id: "1-5",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Cuando golpeas un tambor con una baqueta, ¿qué transformación de energía ocurre principalmente?",
+            options: [
+              "La energía térmica se transforma en energía eléctrica.",
+              "La energía luminosa se transforma en energía química.",
+              "La energía eléctrica se transforma en energía magnética.",
+              "La energía mecánica se transforma en energía sonora."
+            ],
+            correctIndex: 3,
+            explanation: "El movimiento de la baqueta (energía mecánica) hace vibrar el parche del tambor y produce sonido (energía sonora)."
+          },
+          {
+            id: "1-6",
+            type: "schema",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Completa el esquema sobre las FORMAS DE ENERGÍA pulsando en cada hueco:",
+            schemaTitle: "FORMAS DE ENERGÍA",
+            nodes: [
+              {
+                label: "Asociada al movimiento",
+                answer: "Energía mecánica",
+                options: ["Energía térmica", "Energía mecánica", "Energía luminosa", "Energía química", "Energía sonora"]
+              },
+              {
+                label: "Contenida en pilas y alimentos",
+                answer: "Energía química",
+                options: ["Energía sonora", "Energía eléctrica", "Energía química", "Energía mecánica", "Energía luminosa"]
+              },
+              {
+                label: "Pasa de cuerpos calientes a fríos",
+                answer: "Energía térmica",
+                options: ["Energía luminosa", "Energía sonora", "Energía mecánica", "Energía térmica", "Energía química"]
+              },
+              {
+                label: "Transportada por las vibraciones",
+                answer: "Energía sonora",
+                options: ["Energía sonora", "Energía química", "Energía térmica", "Energía eléctrica", "Energía luminosa"]
+              }
+            ],
+            explanation: "Cada manifestación de la energía recibe un nombre según cómo actúa: mecánica (movimiento), química (sustancias), térmica (calor) y sonora (vibraciones)."
+          },
+          {
+            id: "1-7",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Si dejamos una cuchara metálica dentro de un cazo con sopa muy caliente, la cuchara se calienta. ¿Qué propiedad de la energía explica esto?",
+            options: [
+              "Que la energía se almacena en los metales.",
+              "Que la energía se transfiere de un cuerpo a otro.",
+              "Que la energía eléctrica se convierte en luminosa.",
+              "Que la energía sonora atraviesa los líquidos."
+            ],
+            correctIndex: 1,
+            explanation: "La energía térmica pasa (se transfiere) desde el cuerpo más caliente (la sopa) al cuerpo más frío (la cuchara)."
+          },
+          {
+            id: "1-8",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿En cuál de estos objetos se encuentra almacenada la energía química?",
+            options: [
+              "En el agua que cae por una cascada.",
+              "En el viento que mueve un velero.",
+              "En la gasolina de un depósito y en las pilas.",
+              "En el rayo de luz que entra por la ventana."
+            ],
+            correctIndex: 2,
+            explanation: "La energía química está almacenada en sustancias como los alimentos, los combustibles (gasolina, carbón) y las pilas."
+          },
+          {
+            id: "1-9",
+            type: "order",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Ordena paso a paso la cadena de transformaciones de energía cuando desayunas y sales a pedalear en bicicleta:",
+            steps: [
+              "1. Los alimentos que desayunas contienen energía química almacenada.",
+              "2. Tu cuerpo transforma esa energía química en energía mecánica para mover las piernas.",
+              "3. Al pedalear, transfieres energía mecánica a las ruedas de la bicicleta.",
+              "4. Parte de esa energía se transforma en energía térmica porque tus músculos entran en calor."
+            ],
+            explanation: "La energía química de los alimentos se transforma en movimiento (mecánica) y también genera calor (térmica) en nuestro cuerpo."
+          },
+          {
+            id: "1-10",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Cuál de estas afirmaciones sobre la energía es VERDADERA?",
+            options: [
+              "La energía no tiene masa ni ocupa volumen, pero observamos sus efectos.",
+              "La energía únicamente existe cuando encendemos aparatos eléctricos.",
+              "La energía se puede destruir por completo cuando se apaga una bombilla.",
+              "La energía no se puede guardar ni almacenar en ningún tipo de objeto."
+            ],
+            correctIndex: 0,
+            explanation: "La energía no es materia (no tiene masa ni ocupa lugar), pero sabemos que existe por los cambios que provoca."
+          }
+        ]
+      },
+
+      // -----------------------------------------------------------------------
+      // NIVEL 2: LAS FUENTES DE ENERGÍA (10 preguntas)
+      // -----------------------------------------------------------------------
+      {
+        id: 2,
+        title: "Las fuentes de energía",
+        subtitle: "Fuentes renovables y no renovables",
+        icon: "🌞",
+        color: "from-emerald-400 to-teal-600",
+        border: "border-emerald-500",
+        questions: [
+          {
+            id: "2-1",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Qué son las fuentes de energía renovables?",
+            options: [
+              "Recursos naturales que existen en cantidades limitadas y se agotan al usarlos.",
+              "Recursos naturales que no se agotan porque se regeneran continuamente.",
+              "Minerales radiactivos que se extraen del subsuelo para las centrales.",
+              "Sustancias fósiles formadas hace millones de años bajo la tierra."
+            ],
+            correctIndex: 1,
+            explanation: "Las fuentes renovables (como el sol, el viento o el agua) no se agotan porque la naturaleza las repone de forma continua."
+          },
+          {
+            id: "2-2",
+            type: "match",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Une con flechas cada fuente de energía renovable con el recurso natural que aprovecha:",
+            pairs: [
+              { left: "Energía eólica", right: "La fuerza del viento" },
+              { left: "Energía hidráulica", right: "El agua en movimiento" },
+              { left: "Energía geotérmica", right: "El calor interno de la Tierra" },
+              { left: "Biomasa", right: "Restos de seres vivos y plantas" }
+            ],
+            explanation: "La eólica usa el viento; la hidráulica, el agua; la geotérmica, el calor terrestre; y la biomasa, materia orgánica."
+          },
+          {
+            id: "2-3",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Cuáles son los tres combustibles fósiles principales?",
+            options: [
+              "Uranio, plutonio y biomasa.",
+              "Viento, mareas y radiación solar.",
+              "Carbón, petróleo y gas natural.",
+              "Agua embalsada, vapor y geotermia."
+            ],
+            correctIndex: 2,
+            explanation: "El carbón, el petróleo y el gas natural son combustibles fósiles (fuentes no renovables) formados a partir de restos de seres vivos hace millones de años."
+          },
+          {
+            id: "2-4",
+            type: "schema",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Completa el esquema de clasificación de las FUENTES DE ENERGÍA:",
+            schemaTitle: "CLASIFICACIÓN DE LAS FUENTES DE ENERGÍA",
+            nodes: [
+              {
+                label: "Renovable: radiación solar",
+                answer: "Energía solar",
+                options: ["Energía nuclear", "Energía solar", "Gas natural", "Energía eólica", "Carbón"]
+              },
+              {
+                label: "Renovable: materia orgánica",
+                answer: "Biomasa",
+                options: ["Petróleo", "Uranio", "Biomasa", "Energía geotérmica", "Energía hidráulica"]
+              },
+              {
+                label: "No renovable: combustible fósil líquido",
+                answer: "Petróleo",
+                options: ["Energía mareomotriz", "Biomasa", "Energía solar", "Petróleo", "Energía eólica"]
+              },
+              {
+                label: "No renovable: sustancia radiactiva",
+                answer: "Uranio",
+                options: ["Uranio", "Gas natural", "Energía geotérmica", "Carbón", "Energía hidráulica"]
+              }
+            ],
+            explanation: "Las fuentes renovables incluyen sol, viento, agua, biomasa y geotermia; las no renovables son carbón, petróleo, gas natural y uranio."
+          },
+          {
+            id: "2-5",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Qué tipo de energía aprovechan las placas fotovoltaicas instaladas en los tejados?",
+            options: [
+              "La energía luminosa del Sol para transformarla en electricidad.",
+              "El calor interno de la Tierra para calentar las tuberías.",
+              "La energía química del gas natural para producir vapor.",
+              "La energía mecánica de las corrientes de aire nocturnas."
+            ],
+            correctIndex: 0,
+            explanation: "Los paneles solares fotovoltaicos captan la luz del Sol (energía luminosa) y la transforman directamente en energía eléctrica."
+          },
+          {
+            id: "2-6",
+            type: "fill",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Completa el texto sobre las fuentes no renovables:",
+            textParts: [
+              "Las fuentes de energía no renovables se encuentran en la naturaleza en cantidades ",
+              ". Entre ellas están los combustibles ",
+              ", como el carbón y el petróleo, y las sustancias radiactivas como el ",
+              ", que se emplea en las centrales nucleares."
+            ],
+            blanks: ["limitadas", "fósiles", "uranio"],
+            wordBank: ["limitadas", "fósiles", "uranio", "ilimitadas", "renovables"],
+            explanation: "Las fuentes no renovables existen en cantidades limitadas y tardan millones de años en formarse, por lo que se agotan."
+          },
+          {
+            id: "2-7",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Cómo se aprovecha la energía hidráulica en una central hidroeléctrica?",
+            options: [
+              "Quemando carbón para hervir el agua de un embalse.",
+              "Utilizando el calor de los volcanes submarinos.",
+              "Haciendo caer agua almacenada en un embalse para mover una turbina.",
+              "Captando los rayos solares mediante espejos gigantes."
+            ],
+            correctIndex: 2,
+            explanation: "En una central hidroeléctrica, el agua caída desde una presa (energía mecánica) hace girar unas turbinas conectadas a un generador."
+          },
+          {
+            id: "2-8",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Qué es la biomasa como fuente de energía?",
+            options: [
+              "El movimiento de las olas y las mareas del océano.",
+              "El vapor de agua que sale a presión de las rocas subterráneas.",
+              "El conjunto de minerales metálicos usados en los cables.",
+              "La materia orgánica de origen vegetal o animal usada como combustible."
+            ],
+            correctIndex: 3,
+            explanation: "La biomasa incluye leña, restos de podas, cáscaras o residuos agrícolas que se aprovechan para obtener calor o electricidad."
+          },
+          {
+            id: "2-9",
+            type: "order",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Ordena el proceso por el que un aerogenerador (molino moderno) produce electricidad:",
+            steps: [
+              "1. El viento (energía eólica) empuja las aspas del aerogenerador.",
+              "2. Las aspas giran y transmiten esa energía mecánica a un eje interior.",
+              "3. El eje hace funcionar un generador situado dentro de la góndola.",
+              "4. El generador transforma la energía mecánica en energía eléctrica."
+            ],
+            explanation: "El viento mueve las aspas (energía mecánica) y el generador interior convierte ese giro en corriente eléctrica."
+          },
+          {
+            id: "2-10",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Cuál es la principal ventaja ambiental de las fuentes renovables frente a los combustibles fósiles?",
+            options: [
+              "Que se pueden almacenar fácilmente en depósitos subterráneos.",
+              "Que no se agotan y contaminan mucho menos la atmósfera.",
+              "Que producen residuos radiactivos de muy larga duración.",
+              "Que funcionan siempre con la misma intensidad de día y de noche."
+            ],
+            correctIndex: 1,
+            explanation: "Las fuentes renovables no se agotan y apenas emiten gases contaminantes, aunque dependen de factores naturales como el sol o el viento."
+          }
+        ]
+      },
+
+      // -----------------------------------------------------------------------
+      // NIVEL 3: LA ENERGÍA ELÉCTRICA (10 preguntas)
+      // -----------------------------------------------------------------------
+      {
+        id: 3,
+        title: "La energía eléctrica",
+        subtitle: "Cargas eléctricas, electricidad estática y materiales",
+        icon: "🧲",
+        color: "from-cyan-400 to-blue-600",
+        border: "border-cyan-500",
+        questions: [
+          {
+            id: "3-1",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "En estado normal, los objetos de nuestro alrededor son eléctricamente neutros. ¿Por qué?",
+            options: [
+              "Porque tienen el mismo número de cargas positivas que de cargas negativas.",
+              "Porque no contienen ningún tipo de carga eléctrica en su interior.",
+              "Porque todas sus cargas positivas se han escapado hacia el aire.",
+              "Porque están recubiertos de materiales aislantes como el plástico."
+            ],
+            correctIndex: 0,
+            explanation: "Todos los cuerpos tienen cargas positivas y negativas; cuando tienen la misma cantidad de ambas, son neutros."
+          },
+          {
+            id: "3-2",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Qué ocurre cuando acercamos dos cuerpos que tienen cargas eléctricas del MISMO tipo (por ejemplo, dos cargas negativas)?",
+            options: [
+              "Se atraen con mucha fuerza y se quedan pegados.",
+              "Pierden todas sus cargas y se vuelven neutros al instante.",
+              "Se repelen, es decir, tienden a separarse entre sí.",
+              "Producen una corriente eléctrica continua entre ambos."
+            ],
+            correctIndex: 2,
+            explanation: "Las cargas del mismo signo (positiva con positiva, o negativa con negativa) se repelen; las de distinto signo se atraen."
+          },
+          {
+            id: "3-3",
+            type: "match",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Clasifica estos materiales uniendo con flechas según sean conductores o aislantes:",
+            pairs: [
+              { left: "El cobre de los cables", right: "Material conductor" },
+              { left: "El plástico que recubre un enchufe", right: "Material aislante" },
+              { left: "La madera seca", right: "Material aislante" },
+              { left: "El aluminio y la plata", right: "Material conductor" }
+            ],
+            explanation: "Los metales (cobre, aluminio, plata) son excelentes conductores; el plástico, la madera, el vidrio y la goma son aislantes."
+          },
+          {
+            id: "3-4",
+            type: "fill",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Completa el texto sobre lo que ocurre al frotar un bolígrafo de plástico con un jersey de lana:",
+            textParts: [
+              "Al frotar el bolígrafo con la lana, pasan cargas ",
+              " de la lana al bolígrafo. El bolígrafo queda cargado negativamente y la lana positivamente. Como tienen cargas de distinto signo, ambos cuerpos se ",
+              ". Este fenómeno se llama electricidad ",
+              "."
+            ],
+            blanks: ["negativas", "atraen", "estática"],
+            wordBank: ["negativas", "atraen", "estática", "positivas", "repelen"],
+            explanation: "Al frotar dos objetos se transfieren cargas negativas y aparece la electricidad estática, haciendo que se atraigan cargas opuestas."
+          },
+          {
+            id: "3-5",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Cuál es la diferencia entre la electricidad estática y la corriente eléctrica?",
+            options: [
+              "La electricidad estática solo aparece en metales y la corriente en plásticos.",
+              "La corriente eléctrica consiste en el movimiento ordenado de cargas por un material.",
+              "La electricidad estática sirve para encender electrodomésticos y la corriente no.",
+              "En la corriente eléctrica las cargas positivas viajan más rápido que la luz."
+            ],
+            correctIndex: 1,
+            explanation: "Mientras la electricidad estática queda acumulada en un cuerpo, la corriente eléctrica es el desplazamiento continuo de cargas por un conductor."
+          },
+          {
+            id: "3-6",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Por qué los cables eléctricos que usamos en casa llevan cobre por dentro y plástico por fuera?",
+            options: [
+              "Porque el plástico conduce mejor la corriente cuando hace calor.",
+              "Porque el cobre es un aislante barato y el plástico almacena energía.",
+              "Porque ambos materiales son aislantes y evitan que se pierda luz.",
+              "Porque el cobre conduce la corriente y el plástico nos protege de descargas."
+            ],
+            correctIndex: 3,
+            explanation: "El cobre permite que circule la corriente eléctrica con facilidad y el recubrimiento de plástico (aislante) evita que nos electrocutemos al tocarlo."
+          },
+          {
+            id: "3-7",
+            type: "schema",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Completa el esquema sobre CARGAS ELÉCTRICAS Y MATERIALES:",
+            schemaTitle: "LA ENERGÍA ELÉCTRICA",
+            nodes: [
+              {
+                label: "Cargas de distinto signo (+ y -)",
+                answer: "Se atraen",
+                options: ["Se repelen", "Se atraen", "Se destruyen", "No interactúan", "Se congelan"]
+              },
+              {
+                label: "Cargas del mismo signo (- y -)",
+                answer: "Se repelen",
+                options: ["Se atraen", "Se neutralizan", "Se repelen", "Se iluminan", "Se unen"]
+              },
+              {
+                label: "Permiten pasar la corriente (cobre, oro)",
+                answer: "Conductores",
+                options: ["Aislantes", "Neutros", "Generadores", "Conductores", "Receptores"]
+              },
+              {
+                label: "No dejan pasar la corriente (goma, vidrio)",
+                answer: "Aislantes",
+                options: ["Conductores", "Aislantes", "Magnéticos", "Térmicos", "Radiactivos"]
+              }
+            ],
+            explanation: "Cargas opuestas se atraen, cargas iguales se repelen; los conductores dejan pasar la corriente y los aislantes la bloquean."
+          },
+          {
+            id: "3-8",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Cuál de estos grupos contiene ÚNICAMENTE materiales aislantes de la electricidad?",
+            options: [
+              "Madera, plástico, vidrio y goma.",
+              "Hierro, cobre, agua salada y vidrio.",
+              "Aluminio, oro, madera y plástico.",
+              "Plata, acero, goma y cartón seco."
+            ],
+            correctIndex: 0,
+            explanation: "La madera seca, el plástico, el vidrio y la goma son materiales aislantes porque no permiten el paso de las cargas eléctricas."
+          },
+          {
+            id: "3-9",
+            type: "order",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Ordena lo que sucede cuando acercas un globo frotado con lana a unos trocitos de papel neutros:",
+            steps: [
+              "1. Al frotar el globo con la lana, el globo gana cargas negativas.",
+              "2. Acercamos el globo cargado negativamente a los papelitos neutros.",
+              "3. Las cargas positivas de los papeles son atraídas hacia el lado del globo.",
+              "4. Los trocitos de papel se levantan y quedan pegados al globo."
+            ],
+            explanation: "El globo cargado negativamente atrae a las cargas positivas de los trozos de papel, venciendo incluso a la gravedad."
+          },
+          {
+            id: "3-10",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Por qué a veces sentimos un pequeño chispazo al tocar el pomo metálico de una puerta después de caminar sobre una alfombra?",
+            options: [
+              "Porque el pomo tiene una pila escondida en su interior.",
+              "Porque hemos acumulado electricidad estática al rozar la alfombra y se descarga en el metal.",
+              "Porque el metal de la puerta es un material aislante que rebota las cargas.",
+              "Porque la temperatura de la habitación convierte el aire en corriente continua."
+            ],
+            correctIndex: 1,
+            explanation: "Al caminar sobre la alfombra acumulamos cargas eléctricas (electricidad estática) que saltan de golpe al tocar un conductor metálico."
+          }
+        ]
+      },
+
+      // -----------------------------------------------------------------------
+      // NIVEL 4: LA CORRIENTE ELÉCTRICA Y LOS CIRCUITOS (10 preguntas + 2 SVG)
+      // -----------------------------------------------------------------------
+      {
+        id: 4,
+        title: "La corriente eléctrica",
+        subtitle: "Circuitos, efectos de la corriente y transporte eléctrico",
+        icon: "🔌",
+        color: "from-purple-500 to-indigo-600",
+        border: "border-purple-500",
+        questions: [
+          {
+            id: "4-1",
+            type: "diagram",
+            diagramId: "circuit",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Observa el dibujo del CIRCUITO ELÉCTRICO y coloca cada nombre en su lugar correspondiente:",
+            targets: [
+              { id: "c1", x: 115, y: 155, label: "1", answer: "Generador (Pila)" },
+              { id: "c2", x: 300, y: 55,  label: "2", answer: "Interruptor" },
+              { id: "c3", x: 485, y: 155, label: "3", answer: "Receptor (Bombilla)" },
+              { id: "c4", x: 300, y: 255, label: "4", answer: "Cables conductores" }
+            ],
+            options: ["Generador (Pila)", "Interruptor", "Receptor (Bombilla)", "Cables conductores"],
+            explanation: "Todo circuito básico consta de: generador (aporta energía), cables conductores (transportan la corriente), interruptor (abre o cierra el paso) y receptor (aprovecha la electricidad)."
+          },
+          {
+            id: "4-2",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Cuál es la función del INTERRUPTOR en un circuito eléctrico?",
+            options: [
+              "Transformar la energía eléctrica en luz o movimiento.",
+              "Proporcionar la energía necesaria para que circulen las cargas.",
+              "Permitir o interrumpir el paso de la corriente eléctrica.",
+              "Unir todos los componentes mediante hilos de plástico."
+            ],
+            correctIndex: 2,
+            explanation: "El interruptor abre el circuito (impide el paso de la corriente) o lo cierra (permite que circule la electricidad)."
+          },
+          {
+            id: "4-3",
+            type: "match",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Une cada aparato con el EFECTO DE LA CORRIENTE ELÉCTRICA que produce principalmente:",
+            pairs: [
+              { left: "Una tostadora o plancha", right: "Efecto calorífico" },
+              { left: "Un timbre escolar", right: "Efecto sonoro" },
+              { left: "Una batidora o ventilador", right: "Efecto mecánico" },
+              { left: "Un electroimán de una grúa", right: "Efecto magnético" }
+            ],
+            explanation: "La corriente eléctrica produce efectos caloríficos (tostadora), luminosos (bombilla), sonoros (timbre), mecánicos (motores) y magnéticos (electroimanes)."
+          },
+          {
+            id: "4-4",
+            type: "diagram",
+            diagramId: "transport",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Observa el dibujo del TRANSPORTE DE LA ENERGÍA ELÉCTRICA y coloca el nombre de cada elemento:",
+            targets: [
+              { id: "t1", x: 75,  y: 185, label: "1", answer: "Central eléctrica" },
+              { id: "t2", x: 200, y: 195, label: "2", answer: "Estación elevadora" },
+              { id: "t3", x: 335, y: 95,  label: "3", answer: "Torres y líneas de alta tensión" },
+              { id: "t4", x: 465, y: 195, label: "4", answer: "Subestación transformadora" },
+              { id: "t5", x: 585, y: 185, label: "5", answer: "Red de distribución y hogares" }
+            ],
+            options: [
+              "Central eléctrica",
+              "Estación elevadora",
+              "Torres y líneas de alta tensión",
+              "Subestación transformadora",
+              "Red de distribución y hogares"
+            ],
+            explanation: "La electricidad se produce en la central, sube su tensión en la estación elevadora, viaja por torres de alta tensión, baja su tensión en la subestación y llega a los hogares."
+          },
+          {
+            id: "4-5",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Por qué se eleva la tensión de la electricidad al salir de la central eléctrica antes de viajar por los cables?",
+            options: [
+              "Para que la electricidad cambie de color y sea visible en las torres.",
+              "Para evitar que se pierda mucha energía en forma de calor durante el viaje.",
+              "Para transformar la corriente eléctrica en electricidad estática.",
+              "Para que los electrodomésticos de casa funcionen sin enchufes."
+            ],
+            correctIndex: 1,
+            explanation: "Al transportar la electricidad a alta tensión se reduce muchísimo la pérdida de energía en forma de calor a lo largo de cientos de kilómetros."
+          },
+          {
+            id: "4-6",
+            type: "fill",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Completa la explicación sobre cómo funciona un circuito eléctrico:",
+            textParts: [
+              "Para que un receptor funcione, el circuito debe estar ",
+              ". En ese momento, las cargas eléctricas salen de un polo del ",
+              ", viajan por los cables conductores hasta el ",
+              " y regresan al otro polo."
+            ],
+            blanks: ["cerrado", "generador", "receptor"],
+            wordBank: ["cerrado", "generador", "receptor", "abierto", "aislante"],
+            explanation: "Si el interruptor está abierto, el camino se corta y no pasa corriente; solo cuando el circuito está cerrado funciona el receptor."
+          },
+          {
+            id: "4-7",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Qué es un electroimán y qué efecto de la corriente demuestra?",
+            options: [
+              "Una pila que funciona con luz solar y demuestra el efecto luminoso.",
+              "Un cable de cobre enrollado a un hierro que actúa como imán al pasar corriente.",
+              "Una resistencia que se pone al rojo vivo y demuestra el efecto calorífico.",
+              "Un interruptor automático que corta la luz cuando hay tormenta."
+            ],
+            correctIndex: 1,
+            explanation: "Un electroimán se comporta como un imán únicamente mientras circula corriente eléctrica por su bobina (efecto magnético)."
+          },
+          {
+            id: "4-8",
+            type: "schema",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Completa el esquema sobre los ELEMENTOS DE UN CIRCUITO ELÉCTRICO:",
+            schemaTitle: "ELEMENTOS DE UN CIRCUITO",
+            nodes: [
+              {
+                label: "Suministra energía eléctrica (pila, batería)",
+                answer: "Generador",
+                options: ["Receptor", "Interruptor", "Generador", "Aislante", "Contador"]
+              },
+              {
+                label: "Transportan la corriente (hilos de cobre)",
+                answer: "Cables conductores",
+                options: ["Cables conductores", "Generador", "Subestación", "Interruptor", "Receptor"]
+              },
+              {
+                label: "Transforma electricidad en otra energía (motor, luz)",
+                answer: "Receptor",
+                options: ["Interruptor", "Generador", "Receptor", "Enchufe", "Transformador"]
+              },
+              {
+                label: "Controla si el circuito está abierto o cerrado",
+                answer: "Interruptor",
+                options: ["Receptor", "Interruptor", "Generador", "Cable", "Fusible"]
+              }
+            ],
+            explanation: "Generador, cables conductores, receptor e interruptor son los cuatro elementos fundamentales de todo circuito."
+          },
+          {
+            id: "4-9",
+            type: "order",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Ordena el recorrido que sigue la energía eléctrica desde que se genera hasta que enciendes la luz de tu cuarto:",
+            steps: [
+              "1. Se produce electricidad en una central eléctrica (eólica, solar, térmica, etc.).",
+              "2. Una estación elevadora aumenta la tensión y la envía por torres de alta tensión.",
+              "3. Una subestación transformadora cerca de la ciudad reduce la tensión eléctrica.",
+              "4. La red de distribución lleva la corriente hasta el cuadro eléctrico de tu vivienda."
+            ],
+            explanation: "Central -> Estación elevadora -> Líneas de alta tensión -> Subestación transformadora -> Red de distribución y hogares."
+          },
+          {
+            id: "4-10",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Cuál de estos elementos de una vivienda sirve para proteger la instalación eléctrica y a las personas si hay un problema?",
+            options: [
+              "El cuadro general de mando y protección (interruptores automáticos).",
+              "El filamento de las bombillas de bajo consumo.",
+              "Las torres metálicas de alta tensión del tejado.",
+              "El cable de plástico que conecta el televisor."
+            ],
+            correctIndex: 0,
+            explanation: "El cuadro eléctrico general (con sus interruptores automáticos y diferencial) corta la corriente ante sobrecargas o fallos."
+          }
+        ]
+      },
+
+      // -----------------------------------------------------------------------
+      // NIVEL 5: EL USO DE LA ENERGÍA (10 preguntas)
+      // -----------------------------------------------------------------------
+      {
+        id: 5,
+        title: "El uso de la energía",
+        subtitle: "Impacto ambiental, residuos y ahorro energético",
+        icon: "🌍",
+        color: "from-rose-500 to-amber-500",
+        border: "border-rose-500",
+        questions: [
+          {
+            id: "5-1",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Cuál es el principal problema del uso masivo de combustibles fósiles como el carbón y el petróleo?",
+            options: [
+              "Que emiten gases contaminantes y además se van agotando.",
+              "Que enfrían demasiado la atmósfera y provocan glaciaciones.",
+              "Que generan grandes cantidades de residuos radiactivos líquidos.",
+              "Que solo pueden utilizarse durante las horas de luz solar."
+            ],
+            correctIndex: 0,
+            explanation: "Al quemar combustibles fósiles se liberan gases contaminantes (como el dióxido de carbono) y se agotan unas reservas que son limitadas."
+          },
+          {
+            id: "5-2",
+            type: "match",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Une cada problema ambiental relacionado con la energía con su causa principal:",
+            pairs: [
+              { left: "Calentamiento global", right: "Aumento del efecto invernadero por CO2" },
+              { left: "Lluvia ácida", right: "Gases de centrales y fábricas mezclados con nubes" },
+              { left: "Residuos radiactivos", right: "Combustible usado en centrales nucleares" },
+              { left: "Agotamiento de recursos", right: "Consumo excesivo de fuentes no renovables" }
+            ],
+            explanation: "El CO2 intensifica el efecto invernadero; ciertos gases forman lluvia ácida; las centrales nucleares generan residuos radiactivos; y los combustibles fósiles se agotan."
+          },
+          {
+            id: "5-3",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Qué es exactamente la lluvia ácida?",
+            options: [
+              "Un tipo de granizo que cae cuando los aerogeneradores giran muy rápido.",
+              "Agua de lluvia que arrastra sustancias contaminantes del aire y daña bosques y suelos.",
+              "El vapor limpio que sale de las centrales hidroeléctricas en invierno.",
+              "La humedad que se condensa dentro de los paneles solares fotovoltaicos."
+            ],
+            correctIndex: 1,
+            explanation: "La lluvia ácida se forma cuando gases contaminantes expulsados al quemar combustibles se mezclan con el vapor de agua de las nubes."
+          },
+          {
+            id: "5-4",
+            type: "fill",
+            difficulty: "Media",
+            points: 20,
+            prompt: "Completa el texto sobre el efecto invernadero y el calentamiento global:",
+            textParts: [
+              "Algunos gases de la atmósfera, como el dióxido de ",
+              ", retienen parte del calor del Sol. Cuando quemamos muchos combustibles fósiles, aumentan estos gases y sube la ",
+              " media del planeta, provocando el ",
+              " global."
+            ],
+            blanks: ["carbono", "temperatura", "calentamiento"],
+            wordBank: ["carbono", "temperatura", "calentamiento", "oxígeno", "enfriamiento"],
+            explanation: "El exceso de dióxido de carbono refuerza el efecto invernadero y eleva la temperatura media de la Tierra (calentamiento global)."
+          },
+          {
+            id: "5-5",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Por qué son tan peligrosos los residuos radiactivos que producen las centrales nucleares?",
+            options: [
+              "Porque se evaporan rápidamente y provocan lluvia ácida en las ciudades.",
+              "Porque atraen los rayos de las tormentas hacia las líneas de alta tensión.",
+              "Porque emiten radiaciones perjudiciales para los seres vivos durante miles de años.",
+              "Porque impiden que el viento mueva los aerogeneradores cercanos."
+            ],
+            correctIndex: 2,
+            explanation: "Los residuos radiactivos mantienen su peligrosidad durante muchísimo tiempo y deben almacenarse en lugares muy seguros y aislados."
+          },
+          {
+            id: "5-6",
+            type: "schema",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Completa el esquema sobre MEDIDAS DE AHORRO ENERGÉTICO EN CASA Y EN EL TRANSPORTE:",
+            schemaTitle: "HÁBITOS DE AHORRO DE ENERGÍA",
+            nodes: [
+              {
+                label: "Iluminación eficiente en casa",
+                answer: "Usar bombillas LED y luz natural",
+                options: ["Dejar luces en modo espera", "Usar bombillas LED y luz natural", "Poner lámparas halógenas", "Encender luces de día", "Tapar las ventanas"]
+              },
+              {
+                label: "Climatización responsable",
+                answer: "No abusar de calefacción ni aire",
+                options: ["Abrir ventanas con calefacción", "Poner el aire a 16 grados", "No abusar de calefacción ni aire", "Calentar habitaciones vacías", "Usar estufas de carbón"]
+              },
+              {
+                label: "Desplazamientos por la ciudad",
+                answer: "Ir a pie, en bici o transporte público",
+                options: ["Usar siempre coche privado", "Ir a pie, en bici o transporte público", "Acelerar bruscamente", "Dejar el motor encendido", "Viajar solo en coche"]
+              },
+              {
+                label: "Consumo de materiales",
+                answer: "Reducir, reutilizar y reciclar",
+                options: ["Tirar todo al mismo cubo", "Comprar productos de un uso", "Reducir, reutilizar y reciclar", "Desperdiciar papel y vidrio", "Quemar los residuos"]
+              }
+            ],
+            explanation: "Ahorrar energía implica aprovechar la luz natural, moderar la climatización, usar transporte sostenible y aplicar las 3R (reducir, reutilizar, reciclar)."
+          },
+          {
+            id: "5-7",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "¿Qué significa la etiqueta energética de clase A (color verde) en un electrodoméstico?",
+            options: [
+              "Que es el aparato más grande y pesado de la tienda.",
+              "Que consume muy poca energía para realizar su trabajo.",
+              "Que funciona únicamente conectado a placas solares.",
+              "Que no necesita conectarse a la red eléctrica de la casa."
+            ],
+            correctIndex: 1,
+            explanation: "La etiqueta energética clasifica los aparatos según su eficiencia; la clase A (verde) indica el menor consumo eléctrico."
+          },
+          {
+            id: "5-8",
+            type: "mcq",
+            difficulty: "Media",
+            points: 20,
+            prompt: "¿Qué entendemos por 'desarrollo sostenible' en relación con la energía?",
+            options: [
+              "Utilizar toda la energía disponible hoy sin pensar en el futuro.",
+              "Prohibir el uso de cualquier tipo de máquina o transporte.",
+              "Satisfacer nuestras necesidades actuales sin agotar los recursos ni dañar el planeta.",
+              "Sustituir todas las energías renovables por centrales térmicas de carbón."
+            ],
+            correctIndex: 2,
+            explanation: "El desarrollo sostenible busca cubrir nuestras necesidades energéticas cuidando el medio ambiente para las generaciones futuras."
+          },
+          {
+            id: "5-9",
+            type: "order",
+            difficulty: "Difícil",
+            points: 30,
+            prompt: "Ordena cómo se produce el calentamiento global debido al abuso de combustibles fósiles:",
+            steps: [
+              "1. Quemamos grandes cantidades de carbón, petróleo y gas en fábricas y vehículos.",
+              "2. Se libera mucho dióxido de carbono (CO2) a la atmósfera.",
+              "3. Ese exceso de gases retiene más calor solar del habitual (efecto invernadero).",
+              "4. Aumenta la temperatura media de la Tierra y se altera el clima."
+            ],
+            explanation: "La quema de combustibles fósiles incrementa el CO2 atmosférico, intensificando el efecto invernadero y elevando la temperatura global."
+          },
+          {
+            id: "5-10",
+            type: "mcq",
+            difficulty: "Fácil",
+            points: 10,
+            prompt: "Cuando apagas la televisión con el mando a distancia y se queda el piloto rojo encendido (stand-by), ¿qué ocurre?",
+            options: [
+              "El televisor sigue consumiendo energía eléctrica innecesariamente.",
+              "El televisor devuelve energía eléctrica a los cables de la pared.",
+              "Se recargan las pilas del mando a distancia automáticamente.",
+              "El consumo eléctrico es exactamente cero vatios."
+            ],
+            correctIndex: 0,
+            explanation: "El modo espera o 'stand-by' sigue gastando electricidad; conviene apagar los aparatos por completo."
+          }
+        ]
+      }
+    ];
+
+    // =========================================================================
+    // 3. ESTADO GLOBAL DE LA APLICACIÓN
+    // =========================================================================
+    let state = {
+      studentName: "",
+      score: 0,
+      currentLevelIndex: 0,
+      currentQuestionIndex: 0,
+      completedLevels: [], // IDs de niveles completados (1..5)
+      results: {},         // Mapa por question.id -> { questionId, levelId, levelTitle, prompt, userAnswer, correctAnswer, isCorrect, pointsEarned, maxPoints }
+      // Estado temporal para la pregunta activa
+      tempState: {}
+    };
+
+    // =========================================================================
+    // 4. NAVEGACIÓN ENTRE PANTALLAS Y HUD
+    // =========================================================================
+    function hideAllScreens() {
+      ["screen-start", "screen-map", "screen-game", "screen-report"].forEach(id => {
+        document.getElementById(id).classList.add("hidden");
+      });
+    }
+
+    function updateHUD() {
+      document.getElementById("hud-student-name").textContent = state.studentName;
+      document.getElementById("hud-score").textContent = state.score;
+    }
+
+    function startAdventure() {
+      const input = document.getElementById("student-name-input");
+      const errorMsg = document.getElementById("name-error-msg");
+      const nameVal = input.value.trim();
+
+      if (nameVal.length < 3) {
+        errorMsg.classList.remove("hidden");
+        input.focus();
+        return;
+      }
+
+      errorMsg.classList.add("hidden");
+      state.studentName = nameVal;
+      document.getElementById("top-hud").classList.remove("hidden");
+      updateHUD();
+      showMapScreen();
+    }
+
+    function showMapScreen() {
+      hideAllScreens();
+      document.getElementById("hud-level-info").classList.add("invisible");
+      document.getElementById("screen-map").classList.remove("hidden");
+      renderLevelsMap();
+    }
+
+    function renderLevelsMap() {
+      const grid = document.getElementById("levels-grid");
+      grid.innerHTML = "";
+
+      // Mostrar botón de informe si hay al menos 1 pregunta respondida
+      const answeredCount = Object.keys(state.results).length;
+      const finishBtn = document.getElementById("btn-finish-early");
+      if (answeredCount > 0) {
+        finishBtn.classList.remove("hidden");
+      }
+
+      LEVELS_DATA.forEach((lvl, idx) => {
+        // Desbloqueado si es el nivel 0 o si el anterior ya está completado (o si ya tiene respuestas)
+        const isUnlocked = idx === 0 || state.completedLevels.includes(LEVELS_DATA[idx - 1].id) || state.completedLevels.includes(lvl.id);
+        const isCompleted = state.completedLevels.includes(lvl.id);
+
+        // Calcular aciertos en este nivel
+        const lvlResults = lvl.questions.map(q => state.results[q.id]).filter(Boolean);
+        const correctInLvl = lvlResults.filter(r => r.isCorrect).length;
+
+        const card = document.createElement("div");
+        card.className = `rounded-3xl border-4 p-5 transition-all flex flex-col justify-between ${
+          isUnlocked
+            ? `bg-white ${lvl.border} shadow-md hover:shadow-xl`
+            : "bg-slate-100 border-slate-300 opacity-75"
+        }`;
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="bg-gradient-to-r ${lvl.color} text-white font-display font-bold text-xs sm:text-sm px-3.5 py-1 rounded-full shadow-sm">
+                NIVEL ${lvl.id} · ${lvl.questions.length} RETOS
+              </span>
+              <span class="text-2xl">${isCompleted ? "✅" : isUnlocked ? lvl.icon : "🔒"}</span>
+            </div>
+            <h3 class="font-display font-bold text-xl sm:text-2xl text-slate-900 mb-1">${lvl.title}</h3>
+            <p class="text-slate-600 font-semibold text-sm mb-4">${lvl.subtitle}</p>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-center justify-between text-xs font-extrabold text-slate-500">
+              <span>Progreso: ${lvlResults.length}/${lvl.questions.length}</span>
+              <span>Aciertos: ${correctInLvl}</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r ${lvl.color}" style="width: ${(lvlResults.length / lvl.questions.length) * 100}%"></div>
+            </div>
+            <button
+              onclick="startLevel(${idx})"
+              ${!isUnlocked ? "disabled" : ""}
+              class="btn-3d w-full py-3 px-4 rounded-2xl font-display font-bold text-base sm:text-lg ${
+                isCompleted
+                  ? "bg-emerald-100 text-emerald-900 border-2 border-emerald-400"
+                  : isUnlocked
+                  ? `bg-gradient-to-r ${lvl.color} text-white border-2 border-slate-900/20`
+                  : "bg-slate-300 text-slate-500"
+              }"
+            >
+              ${!isUnlocked ? "🔒 Completa el nivel anterior" : isCompleted ? "🔄 Repasar Nivel" : lvlResults.length > 0 ? "▶️ Continuar Nivel" : "🚀 Entrar al Nivel"}
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function startLevel(levelIndex) {
+      state.currentLevelIndex = levelIndex;
+      const lvl = LEVELS_DATA[levelIndex];
+      // Empezar en la primera pregunta no respondida, o en la 0 si ya completó todas
+      const firstUnanswered = lvl.questions.findIndex(q => !state.results[q.id]);
+      state.currentQuestionIndex = firstUnanswered !== -1 ? firstUnanswered : 0;
+
+      hideAllScreens();
+      document.getElementById("hud-level-info").classList.remove("invisible");
+      document.getElementById("screen-game").classList.remove("hidden");
+      renderCurrentQuestion();
+    }
+
+    // =========================================================================
+    // 5. RENDERIZADO DE CADA TIPO DE ACTIVIDAD INTERACTIVA
+    // =========================================================================
+    function renderCurrentQuestion() {
+      const lvl = LEVELS_DATA[state.currentLevelIndex];
+      const q = lvl.questions[state.currentQuestionIndex];
+      const totalQ = lvl.questions.length;
+
+      // Actualizar barra superior
+      document.getElementById("hud-level-title").textContent = `Nivel ${lvl.id}: ${lvl.title}`;
+      document.getElementById("hud-question-counter").textContent = `${state.currentQuestionIndex + 1} / ${totalQ}`;
+      document.getElementById("hud-progress-bar").style.width = `${((state.currentQuestionIndex + 1) / totalQ) * 100}%`;
+
+      // Etiquetas de dificultad y tipo
+      const diffBadge = document.getElementById("q-difficulty-badge");
+      diffBadge.textContent = `${q.difficulty} · +${q.points} pts`;
+      if (q.difficulty === "Fácil") {
+        diffBadge.className = "bg-emerald-100 text-emerald-800 font-extrabold text-xs sm:text-sm px-3.5 py-1.5 rounded-full";
+      } else if (q.difficulty === "Media") {
+        diffBadge.className = "bg-amber-100 text-amber-800 font-extrabold text-xs sm:text-sm px-3.5 py-1.5 rounded-full";
+      } else {
+        diffBadge.className = "bg-purple-100 text-purple-800 font-extrabold text-xs sm:text-sm px-3.5 py-1.5 rounded-full";
+      }
+
+      const typeNames = {
+        mcq: "📝 Pregunta Tipo Test",
+        match: "🔗 Unir con Flechas",
+        fill: "🧩 Completar Texto",
+        schema: "🗂️ Esquema Interactivo (5 opciones)",
+        order: "🔢 Explicar y Ordenar Proceso",
+        diagram: "🎨 Etiquetar Dibujo Científico"
+      };
+      document.getElementById("q-type-badge").textContent = typeNames[q.type] || "Reto";
+      document.getElementById("q-topic-label").textContent = `Apartado ${lvl.id}: ${lvl.title}`;
+      document.getElementById("q-prompt").textContent = q.prompt;
+
+      // Ocultar feedback anterior y preparar botones
+      document.getElementById("teacher-feedback-box").classList.add("hidden");
+      const submitBtn = document.getElementById("btn-submit-answer");
+      const resetBtn = document.getElementById("btn-reset-activity");
+      submitBtn.classList.add("hidden");
+      resetBtn.classList.add("hidden");
+
+      const area = document.getElementById("q-interactive-area");
+      area.innerHTML = "";
+      state.tempState = { answered: false };
+
+      if (q.type === "mcq") {
+        renderMCQ(q, area);
+      } else if (q.type === "match") {
+        submitBtn.classList.remove("hidden");
+        resetBtn.classList.remove("hidden");
+        renderMatch(q, area);
+      } else if (q.type === "fill") {
+        submitBtn.classList.remove("hidden");
+        resetBtn.classList.remove("hidden");
+        renderFill(q, area);
+      } else if (q.type === "schema") {
+        submitBtn.classList.remove("hidden");
+        resetBtn.classList.remove("hidden");
+        renderSchema(q, area);
+      } else if (q.type === "order") {
+        submitBtn.classList.remove("hidden");
+        resetBtn.classList.remove("hidden");
+        renderOrder(q, area);
+      } else if (q.type === "diagram") {
+        submitBtn.classList.remove("hidden");
+        resetBtn.classList.remove("hidden");
+        renderDiagram(q, area);
+      }
+    }
+
+    function resetCurrentInteractive() {
+      if (state.tempState.answered) return;
+      renderCurrentQuestion();
+    }
+
+    // --- A) TIPO TEST (MCQ) ---
+    function renderMCQ(q, area) {
+      const letters = ["A", "B", "C", "D"];
+      const list = document.createElement("div");
+      list.className = "grid grid-cols-1 gap-3";
+
+      q.options.forEach((optText, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "mcq-option btn-3d text-left bg-slate-50 hover:bg-indigo-50 border-2 border-slate-300 hover:border-indigo-400 rounded-2xl p-4 flex items-center gap-3.5 transition-all";
+        btn.innerHTML = `
+          <span class="w-9 h-9 shrink-0 rounded-xl bg-indigo-600 text-white font-display font-bold flex items-center justify-center text-base">
+            ${letters[idx]}
+          </span>
+          <span class="font-bold text-slate-800 text-base sm:text-lg leading-snug">${optText}</span>
+        `;
+        btn.onclick = () => {
+          if (state.tempState.answered) return;
+          state.tempState.selectedIndex = idx;
+          validateCurrentQuestion();
+        };
+        list.appendChild(btn);
+      });
+
+      area.appendChild(list);
+    }
+
+    // --- B) UNIR CON FLECHAS SVG ---
+    function renderMatch(q, area) {
+      // Barajar derecha sin alterar la definición original
+      const leftItems = q.pairs.map((p, i) => ({ id: i, text: p.left }));
+      const rightItems = [...q.pairs.map((p, i) => ({ id: i, text: p.right }))].sort(() => Math.random() - 0.5);
+
+      state.tempState = {
+        answered: false,
+        selectedLeft: null,
+        connections: {}, // leftId -> rightId
+        leftItems,
+        rightItems
+      };
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "relative select-none";
+      wrapper.innerHTML = `
+        <p class="text-sm font-bold text-indigo-700 mb-3 bg-indigo-50 px-3.5 py-2 rounded-xl">
+          💡 Pulsa primero un recuadro de la izquierda y después su pareja de la derecha para trazar la flecha.
+        </p>
+        <div id="match-container" class="relative grid grid-cols-2 gap-8 sm:gap-16 items-center">
+          <!-- SVG superpuesto para las líneas -->
+          <svg id="match-svg" class="absolute inset-0 w-full h-full pointer-events-none z-10"></svg>
+          <div id="match-left-col" class="space-y-3 z-20"></div>
+          <div id="match-right-col" class="space-y-3 z-20"></div>
+        </div>
+      `;
+      area.appendChild(wrapper);
+
+      const leftCol = wrapper.querySelector("#match-left-col");
+      const rightCol = wrapper.querySelector("#match-right-col");
+
+      leftItems.forEach(item => {
+        const btn = document.createElement("button");
+        btn.id = `match-l-${item.id}`;
+        btn.className = "w-full text-left bg-amber-50 hover:bg-amber-100 border-2 border-amber-400 rounded-2xl p-3 sm:p-4 font-bold text-slate-800 text-sm sm:text-base transition-all shadow-sm";
+        btn.textContent = item.text;
+        btn.onclick = () => selectMatchLeft(item.id);
+        leftCol.appendChild(btn);
+      });
+
+      rightItems.forEach(item => {
+        const btn = document.createElement("button");
+        btn.id = `match-r-${item.id}`;
+        btn.className = "w-full text-left bg-cyan-50 hover:bg-cyan-100 border-2 border-cyan-400 rounded-2xl p-3 sm:p-4 font-bold text-slate-800 text-sm sm:text-base transition-all shadow-sm";
+        btn.textContent = item.text;
+        btn.onclick = () => selectMatchRight(item.id);
+        rightCol.appendChild(btn);
+      });
+
+      window.addEventListener("resize", drawMatchLines);
+    }
+
+    function selectMatchLeft(leftId) {
+      if (state.tempState.answered) return;
+      state.tempState.selectedLeft = leftId;
+      document.querySelectorAll("[id^='match-l-']").forEach(el => {
+        el.classList.remove("ring-4", "ring-purple-500", "bg-purple-100");
+      });
+      const active = document.getElementById(`match-l-${leftId}`);
+      if (active) active.classList.add("ring-4", "ring-purple-500", "bg-purple-100");
+    }
+
+    function selectMatchRight(rightId) {
+      if (state.tempState.answered) return;
+      const leftId = state.tempState.selectedLeft;
+      if (leftId === null || leftId === undefined) return;
+
+      // Eliminar cualquier conexión previa que usara este rightId
+      Object.keys(state.tempState.connections).forEach(k => {
+        if (state.tempState.connections[k] === rightId) {
+          delete state.tempState.connections[k];
+        }
+      });
+
+      state.tempState.connections[leftId] = rightId;
+      state.tempState.selectedLeft = null;
+
+      document.querySelectorAll("[id^='match-l-']").forEach(el => {
+        el.classList.remove("ring-4", "ring-purple-500", "bg-purple-100");
+      });
+      drawMatchLines();
+    }
+
+    function drawMatchLines() {
+      const svg = document.getElementById("match-svg");
+      const container = document.getElementById("match-container");
+      if (!svg || !container || !state.tempState.connections) return;
+
+      const cRect = container.getBoundingClientRect();
+      svg.innerHTML = "";
+
+      const colors = ["#7209B7", "#00B4D8", "#06D6A0", "#F77F00"];
+
+      Object.entries(state.tempState.connections).forEach(([lId, rId], idx) => {
+        const lEl = document.getElementById(`match-l-${lId}`);
+        const rEl = document.getElementById(`match-r-${rId}`);
+        if (!lEl || !rEl) return;
+
+        const lRect = lEl.getBoundingClientRect();
+        const rRect = rEl.getBoundingClientRect();
+
+        const x1 = lRect.right - cRect.left;
+        const y1 = lRect.top + lRect.height / 2 - cRect.top;
+        const x2 = rRect.left - cRect.left;
+        const y2 = rRect.top + rRect.height / 2 - cRect.top;
+
+        const color = colors[idx % colors.length];
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const midX = (x1 + x2) / 2;
+        line.setAttribute("d", `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+        line.setAttribute("stroke", color);
+        line.setAttribute("stroke-width", "4");
+        line.setAttribute("fill", "none");
+        line.setAttribute("stroke-linecap", "round");
+        svg.appendChild(line);
+
+        // Puntos extremos
+        [ [x1, y1], [x2, y2] ].forEach(([cx, cy]) => {
+          const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          dot.setAttribute("cx", cx);
+          dot.setAttribute("cy", cy);
+          dot.setAttribute("r", "6");
+          dot.setAttribute("fill", color);
+          svg.appendChild(dot);
+        });
+      });
+    }
+
+    // --- C) COMPLETAR HUECOS EN TEXTO (CLICK O DRAG & DROP) ---
+    function renderFill(q, area) {
+      const shuffledBank = [...q.wordBank].sort(() => Math.random() - 0.5);
+      state.tempState = {
+        answered: false,
+        filled: Array(q.blanks.length).fill(null),
+        selectedWord: null
+      };
+
+      const container = document.createElement("div");
+      container.className = "space-y-5";
+
+      // Banco de palabras
+      const bankDiv = document.createElement("div");
+      bankDiv.className = "bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-4";
+      bankDiv.innerHTML = `<div class="text-xs font-extrabold uppercase text-indigo-700 mb-2.5">💡 Pulsa una palabra (o arrástrala) y colócala en su hueco:</div>`;
+      const wordsWrap = document.createElement("div");
+      wordsWrap.className = "flex flex-wrap gap-2.5";
+
+      shuffledBank.forEach((word, wIdx) => {
+        const chip = document.createElement("button");
+        chip.id = `word-chip-${wIdx}`;
+        chip.draggable = true;
+        chip.className = "btn-3d bg-white hover:bg-yellow-100 border-2 border-indigo-400 text-slate-900 font-bold px-4 py-2 rounded-xl text-base cursor-pointer";
+        chip.textContent = word;
+
+        chip.onclick = () => {
+          if (state.tempState.answered) return;
+          state.tempState.selectedWord = word;
+          document.querySelectorAll("[id^='word-chip-']").forEach(c => c.classList.remove("ring-4", "ring-amber-400", "bg-amber-100"));
+          chip.classList.add("ring-4", "ring-amber-400", "bg-amber-100");
+        };
+
+        chip.ondragstart = (e) => {
+          e.dataTransfer.setData("text/plain", word);
+        };
+
+        wordsWrap.appendChild(chip);
+      });
+      bankDiv.appendChild(wordsWrap);
+
+      // Párrafo con huecos
+      const textBox = document.createElement("div");
+      textBox.className = "bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 text-lg sm:text-xl font-semibold leading-relaxed text-slate-800";
+
+      q.textParts.forEach((part, idx) => {
+        const span = document.createElement("span");
+        span.textContent = part;
+        textBox.appendChild(span);
+
+        if (idx < q.blanks.length) {
+          const blankBtn = document.createElement("button");
+          blankBtn.id = `blank-slot-${idx}`;
+          blankBtn.className = "inline-flex items-center justify-center min-w-[130px] mx-1.5 my-1 px-3 py-1 rounded-xl border-2 border-dashed border-purple-500 bg-purple-50 text-purple-900 font-display font-bold text-base sm:text-lg align-middle transition-all";
+          blankBtn.textContent = "________";
+
+          blankBtn.onclick = () => {
+            if (state.tempState.answered) return;
+            if (state.tempState.selectedWord) {
+              assignWordToBlank(idx, state.tempState.selectedWord);
+            } else if (state.tempState.filled[idx]) {
+              // Vaciar hueco si se pulsa sin palabra seleccionada
+              state.tempState.filled[idx] = null;
+              blankBtn.textContent = "________";
+              blankBtn.classList.remove("bg-amber-200", "border-solid");
+              blankBtn.classList.add("bg-purple-50", "border-dashed");
+            }
+          };
+
+          blankBtn.ondragover = (e) => e.preventDefault();
+          blankBtn.ondrop = (e) => {
+            e.preventDefault();
+            if (state.tempState.answered) return;
+            const droppedWord = e.dataTransfer.getData("text/plain");
+            if (droppedWord) assignWordToBlank(idx, droppedWord);
+          };
+
+          textBox.appendChild(blankBtn);
+        }
+      });
+
+      container.appendChild(bankDiv);
+      container.appendChild(textBox);
+      area.appendChild(container);
+    }
+
+    function assignWordToBlank(slotIdx, word) {
+      state.tempState.filled[slotIdx] = word;
+      state.tempState.selectedWord = null;
+      document.querySelectorAll("[id^='word-chip-']").forEach(c => c.classList.remove("ring-4", "ring-amber-400", "bg-amber-100"));
+
+      const slot = document.getElementById(`blank-slot-${slotIdx}`);
+      if (slot) {
+        slot.textContent = word;
+        slot.classList.remove("bg-purple-50", "border-dashed");
+        slot.classList.add("bg-amber-200", "border-solid");
+      }
+    }
+
+    // --- D) COMPLETAR ESQUEMA CONCEPTUAL (AL PULSAR SE ABREN 5 OPCIONES) ---
+    function renderSchema(q, area) {
+      state.tempState = {
+        answered: false,
+        nodeAnswers: Array(q.nodes.length).fill(null)
+      };
+
+      const box = document.createElement("div");
+      box.className = "bg-gradient-to-b from-indigo-50 to-purple-50 border-2 border-indigo-300 rounded-3xl p-5 sm:p-6";
+
+      box.innerHTML = `
+        <div class="text-center mb-6">
+          <div class="inline-block bg-indigo-700 text-white font-display font-bold text-lg sm:text-xl px-6 py-2.5 rounded-2xl shadow-md">
+            ${q.schemaTitle}
+          </div>
+          <div class="w-1 h-5 bg-indigo-400 mx-auto"></div>
+          <div class="h-1 bg-indigo-400 w-3/4 mx-auto rounded"></div>
+        </div>
+        <div id="schema-nodes-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+      `;
+
+      const grid = box.querySelector("#schema-nodes-grid");
+      q.nodes.forEach((node, idx) => {
+        const card = document.createElement("div");
+        card.className = "bg-white border-2 border-indigo-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between gap-3";
+        card.innerHTML = `
+          <div class="text-xs font-extrabold uppercase tracking-wide text-indigo-600">
+            📌 ${node.label}
+          </div>
+          <button
+            id="schema-node-btn-${idx}"
+            onclick="openSchemaModal(${idx})"
+            class="btn-3d w-full py-3 px-4 rounded-xl border-2 border-dashed border-purple-400 bg-purple-50 hover:bg-purple-100 text-purple-900 font-display font-bold text-base text-center"
+          >
+            👆 Pulsa para elegir (5 opciones)
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+
+      area.appendChild(box);
+    }
+
+    function openSchemaModal(nodeIdx) {
+      if (state.tempState.answered) return;
+      const lvl = LEVELS_DATA[state.currentLevelIndex];
+      const q = lvl.questions[state.currentQuestionIndex];
+      const node = q.nodes[nodeIdx];
+
+      document.getElementById("schema-modal-title").textContent = `Selecciona el concepto para: "${node.label}"`;
+      const optsContainer = document.getElementById("schema-modal-options");
+      optsContainer.innerHTML = "";
+
+      node.options.forEach((opt, oIdx) => {
+        const btn = document.createElement("button");
+        btn.className = "btn-3d w-full text-left bg-slate-50 hover:bg-purple-100 border-2 border-slate-300 hover:border-purple-500 rounded-2xl p-3.5 font-bold text-slate-800 flex items-center gap-3";
+        btn.innerHTML = `
+          <span class="w-7 h-7 rounded-lg bg-purple-600 text-white font-display font-bold flex items-center justify-center text-sm">${oIdx + 1}</span>
+          <span>${opt}</span>
+        `;
+        btn.onclick = () => {
+          state.tempState.nodeAnswers[nodeIdx] = opt;
+          const targetBtn = document.getElementById(`schema-node-btn-${nodeIdx}`);
+          if (targetBtn) {
+            targetBtn.textContent = opt;
+            targetBtn.classList.remove("border-dashed", "bg-purple-50");
+            targetBtn.classList.add("border-solid", "bg-amber-200", "text-slate-900", "border-amber-500");
+          }
+          closeSchemaModal();
+        };
+        optsContainer.appendChild(btn);
+      });
+
+      document.getElementById("schema-modal").classList.remove("hidden");
+    }
+
+    function closeSchemaModal() {
+      document.getElementById("schema-modal").classList.add("hidden");
+    }
+
+    // --- E) EXPLICAR PROCESOS / ORDENAR SECUENCIA ---
+    function renderOrder(q, area) {
+      // Barajar pasos manteniendo su texto limpio (quitamos el prefijo numérico visual para que piensen el orden)
+      const cleanSteps = q.steps.map((s, idx) => ({
+        correctPos: idx,
+        text: s.replace(/^\d+\.\s*/, "")
+      }));
+      const shuffled = [...cleanSteps].sort(() => Math.random() - 0.5);
+
+      state.tempState = {
+        answered: false,
+        currentOrder: shuffled
+      };
+
+      const info = document.createElement("p");
+      info.className = "text-sm font-bold text-indigo-700 bg-indigo-50 px-3.5 py-2 rounded-xl mb-3";
+      info.textContent = "💡 Usa las flechas ⬆️ y ⬇️ para ordenar correctamente las fases de este proceso desde el principio hasta el final:";
+      area.appendChild(info);
+
+      const listContainer = document.createElement("div");
+      listContainer.id = "order-list-container";
+      listContainer.className = "space-y-2.5";
+      area.appendChild(listContainer);
+
+      drawOrderList();
+    }
+
+    function drawOrderList() {
+      const container = document.getElementById("order-list-container");
+      if (!container) return;
+      container.innerHTML = "";
+
+      state.tempState.currentOrder.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "bg-white border-2 border-indigo-300 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-sm";
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 shrink-0 rounded-full bg-indigo-600 text-white font-display font-bold flex items-center justify-center">
+              ${idx + 1}
+            </span>
+            <span class="font-bold text-slate-800 text-sm sm:text-base">${item.text}</span>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-1.5 shrink-0">
+            <button onclick="moveOrderItem(${idx}, -1)" ${idx === 0 || state.tempState.answered ? "disabled" : ""} class="btn-3d bg-slate-100 hover:bg-amber-200 disabled:opacity-30 px-2.5 py-1.5 rounded-xl border border-slate-300 font-bold text-sm">⬆️</button>
+            <button onclick="moveOrderItem(${idx}, 1)" ${idx === state.tempState.currentOrder.length - 1 || state.tempState.answered ? "disabled" : ""} class="btn-3d bg-slate-100 hover:bg-amber-200 disabled:opacity-30 px-2.5 py-1.5 rounded-xl border border-slate-300 font-bold text-sm">⬇️</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function moveOrderItem(index, delta) {
+      if (state.tempState.answered) return;
+      const arr = state.tempState.currentOrder;
+      const newIndex = index + delta;
+      if (newIndex < 0 || newIndex >= arr.length) return;
+      [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
+      drawOrderList();
+    }
+
+    // --- F) COLOCAR NOMBRES EN DIBUJOS SVG (CIRCUITO Y TRANSPORTE ELÉCTRICO) ---
+    function renderDiagram(q, area) {
+      const shuffledLabels = [...q.options].sort(() => Math.random() - 0.5);
+      state.tempState = {
+        answered: false,
+        selectedLabel: null,
+        placed: {} // targetId -> labelText
+      };
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "space-y-4";
+
+      // Banco de etiquetas
+      const bank = document.createElement("div");
+      bank.className = "bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5";
+      bank.innerHTML = `<div class="text-xs font-extrabold uppercase text-amber-900 mb-2">🏷️ 1. Pulsa una etiqueta y luego 2. Pulsa su recuadro numerado en el dibujo:</div>`;
+      const btnRow = document.createElement("div");
+      btnRow.className = "flex flex-wrap gap-2";
+
+      shuffledLabels.forEach((lbl, i) => {
+        const b = document.createElement("button");
+        b.id = `diag-lbl-${i}`;
+        b.className = "btn-3d bg-white hover:bg-purple-100 border-2 border-purple-400 text-slate-900 font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm";
+        b.textContent = lbl;
+        b.onclick = () => {
+          if (state.tempState.answered) return;
+          state.tempState.selectedLabel = lbl;
+          document.querySelectorAll("[id^='diag-lbl-']").forEach(el => el.classList.remove("ring-4", "ring-purple-500", "bg-purple-100"));
+          b.classList.add("ring-4", "ring-purple-500", "bg-purple-100");
+        };
+        btnRow.appendChild(b);
+      });
+      bank.appendChild(btnRow);
+      wrapper.appendChild(bank);
+
+      // Lienzo con ilustración SVG detallada
+      const canvasBox = document.createElement("div");
+      canvasBox.className = "bg-slate-900 rounded-3xl p-3 sm:p-4 border-4 border-indigo-400 shadow-inner overflow-hidden";
+
+      if (q.diagramId === "circuit") {
+        canvasBox.innerHTML = getCircuitDiagramSVG();
+      } else {
+        canvasBox.innerHTML = getTransportDiagramSVG();
+      }
+
+      // Controles táctiles/accesibles debajo del SVG para cada número (1..N)
+      const slotsGrid = document.createElement("div");
+      slotsGrid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-2";
+
+      q.targets.forEach(t => {
+        const slotBtn = document.createElement("button");
+        slotBtn.id = `diag-slot-${t.id}`;
+        slotBtn.className = "btn-3d bg-indigo-50 hover:bg-indigo-100 border-2 border-dashed border-indigo-500 rounded-2xl p-3 flex items-center gap-2.5 text-left";
+        slotBtn.innerHTML = `
+          <span class="w-7 h-7 shrink-0 rounded-full bg-yellow-400 text-slate-950 font-display font-bold flex items-center justify-center border border-slate-900">
+            ${t.label}
+          </span>
+          <span id="diag-slot-text-${t.id}" class="font-bold text-slate-700 text-xs sm:text-sm">Pulsa para colocar nombre...</span>
+        `;
+        slotBtn.onclick = () => {
+          if (state.tempState.answered) return;
+          if (!state.tempState.selectedLabel) return;
+          const chosen = state.tempState.selectedLabel;
+          state.tempState.placed[t.id] = chosen;
+          state.tempState.selectedLabel = null;
+
+          document.querySelectorAll("[id^='diag-lbl-']").forEach(el => el.classList.remove("ring-4", "ring-purple-500", "bg-purple-100"));
+
+          const txtEl = document.getElementById(`diag-slot-text-${t.id}`);
+          if (txtEl) txtEl.textContent = chosen;
+          slotBtn.classList.remove("border-dashed", "bg-indigo-50");
+          slotBtn.classList.add("border-solid", "bg-emerald-100", "border-emerald-600");
+
+          // Actualizar también texto dentro del SVG si existe
+          const svgTxt = document.getElementById(`svg-badge-${t.id}`);
+          if (svgTxt) svgTxt.textContent = `${t.label}: ${chosen}`;
+        };
+        slotsGrid.appendChild(slotBtn);
+      });
+
+      wrapper.appendChild(canvasBox);
+      wrapper.appendChild(slotsGrid);
+      area.appendChild(wrapper);
+    }
+
+    // Ilustración SVG 1: Circuito eléctrico simple
+    function getCircuitDiagramSVG() {
+      return `
+        <svg viewBox="0 0 600 300" class="w-full h-auto rounded-2xl bg-slate-800">
+          <!-- Cuadrícula técnica de fondo -->
+          <defs>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#334155" stroke-width="0.8"/>
+            </pattern>
+          </defs>
+          <rect width="600" height="300" fill="url(#grid)" />
+
+          <!-- Cables conductores (rectángulo principal) -->
+          <path d="M 115 110 L 115 65 L 265 65" stroke="#F97316" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <path d="M 335 65 L 485 65 L 485 115" stroke="#F97316" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <path d="M 485 195 L 485 245 L 115 245 L 115 200" stroke="#38BDF8" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+          <!-- Elemento 1: Generador (Pila) a la izquierda -->
+          <g transform="translate(85, 110)">
+            <rect x="18" y="-8" width="24" height="10" rx="2" fill="#94A3B8"/>
+            <rect x="5" y="0" width="50" height="90" rx="8" fill="#FACC15" stroke="#1E293B" stroke-width="3"/>
+            <rect x="5" y="45" width="50" height="45" rx="6" fill="#1E293B"/>
+            <text x="30" y="30" text-anchor="middle" fill="#1E293B" font-weight="bold" font-size="22">+</text>
+            <text x="30" y="75" text-anchor="middle" fill="#FACC15" font-weight="bold" font-size="24">-</text>
+          </g>
+
+          <!-- Elemento 2: Interruptor arriba -->
+          <g transform="translate(260, 45)">
+            <rect x="0" y="12" width="80" height="18" rx="4" fill="#64748B"/>
+            <circle cx="12" cy="20" r="6" fill="#E2E8F0"/>
+            <circle cx="68" cy="20" r="6" fill="#E2E8F0"/>
+            <line x1="12" y1="20" x2="62" y2="2" stroke="#EF4444" stroke-width="6" stroke-linecap="round"/>
+          </g>
+
+          <!-- Elemento 3: Receptor (Bombilla) a la derecha -->
+          <g transform="translate(450, 110)">
+            <!-- Resplandor -->
+            <circle cx="35" cy="35" r="42" fill="#FEF08A" opacity="0.25"/>
+            <path d="M 15 35 A 22 22 0 1 1 55 35 C 55 50 47 55 47 65 L 23 65 C 23 55 15 50 15 35 Z" fill="#FDE047" stroke="#F59E0B" stroke-width="3"/>
+            <path d="M 28 65 L 28 40 L 35 32 L 42 40 L 42 65" stroke="#D97706" stroke-width="2.5" fill="none"/>
+            <rect x="22" y="65" width="26" height="18" rx="3" fill="#94A3B8"/>
+          </g>
+
+          <!-- Marcadores numerados 1, 2, 3, 4 -->
+          <g>
+            <circle cx="48" cy="155" r="18" fill="#FFD60A" stroke="#0F172A" stroke-width="3"/>
+            <text x="48" y="161" text-anchor="middle" font-weight="bold" font-size="16" fill="#0F172A">1</text>
+
+            <circle cx="300" cy="24" r="18" fill="#FFD60A" stroke="#0F172A" stroke-width="3"/>
+            <text x="300" y="30" text-anchor="middle" font-weight="bold" font-size="16" fill="#0F172A">2</text>
+
+            <circle cx="552" cy="155" r="18" fill="#FFD60A" stroke="#0F172A" stroke-width="3"/>
+            <text x="552" y="161" text-anchor="middle" font-weight="bold" font-size="16" fill="#0F172A">3</text>
+
+            <circle cx="300" cy="274" r="18" fill="#FFD60A" stroke="#0F172A" stroke-width="3"/>
+            <text x="300" y="280" text-anchor="middle" font-weight="bold" font-size="16" fill="#0F172A">4</text>
+          </g>
+        </svg>
+      `;
+    }
+
+    // Ilustración SVG 2: Transporte de la energía eléctrica
+    function getTransportDiagramSVG() {
+      return `
+        <svg viewBox="0 0 660 280" class="w-full h-auto rounded-2xl bg-sky-900">
+          <!-- Cielo y suelo -->
+          <rect width="660" height="225" fill="#0C4A6E"/>
+          <rect y="225" width="660" height="55" fill="#15803D"/>
+
+          <!-- 1. Central eléctrica (izquierda) -->
+          <g transform="translate(20, 125)">
+            <rect x="0" y="35" width="85" height="65" fill="#E2E8F0" rx="4"/>
+            <polygon points="0,35 42,10 85,35" fill="#EF4444"/>
+            <rect x="58" y="0" width="16" height="45" fill="#94A3B8"/>
+            <circle cx="66" cy="-10" r="8" fill="#CBD5E1" opacity="0.7"/>
+            <circle cx="75" cy="-22" r="10" fill="#CBD5E1" opacity="0.5"/>
+          </g>
+
+          <!-- Cable central -> estación elevadora -->
+          <line x1="105" y1="185" x2="155" y2="185" stroke="#FACC15" stroke-width="4"/>
+
+          <!-- 2. Estación elevadora (transformador grande) -->
+          <g transform="translate(155, 160)">
+            <rect x="0" y="10" width="60" height="55" rx="4" fill="#F59E0B" stroke="#78350F" stroke-width="2"/>
+            <line x1="15" y1="0" x2="15" y2="10" stroke="#CBD5E1" stroke-width="4"/>
+            <line x1="45" y1="0" x2="45" y2="10" stroke="#CBD5E1" stroke-width="4"/>
+          </g>
+
+          <!-- 3. Torres de alta tensión y cables -->
+          <g stroke="#CBD5E1" stroke-width="3" fill="none">
+            <!-- Torre A -->
+            <polygon points="275,225 290,85 305,225" />
+            <line x1="270" y1="110" x2="310" y2="110" />
+            <line x1="273" y1="135" x2="307" y2="135" />
+            <!-- Torre B -->
+            <polygon points="365,225 380,85 395,225" />
+            <line x1="360" y1="110" x2="400" y2="110" />
+            <line x1="363" y1="135" x2="397" y2="135" />
+          </g>
+          <!-- Cables de alta tensión -->
+          <path d="M 200 160 Q 245 130 272 110 Q 335 135 362 110 Q 420 135 455 170" stroke="#FACC15" stroke-width="2.5" fill="none"/>
+          <path d="M 200 165 Q 245 145 274 135 Q 335 155 364 135 Q 420 155 455 175" stroke="#FACC15" stroke-width="2.5" fill="none"/>
+
+          <!-- 4. Subestación transformadora -->
+          <g transform="translate(450, 168)">
+            <rect x="0" y="10" width="52" height="47" rx="4" fill="#38BDF8" stroke="#0369A1" stroke-width="2"/>
+            <circle cx="15" cy="6" r="5" fill="#E2E8F0"/>
+            <circle cx="37" cy="6" r="5" fill="#E2E8F0"/>
+          </g>
+
+          <!-- Cable subestación -> viviendas -->
+          <line x1="502" y1="195" x2="545" y2="195" stroke="#FACC15" stroke-width="3.5"/>
+
+          <!-- 5. Viviendas / Red de distribución -->
+          <g transform="translate(545, 145)">
+            <rect x="0" y="25" width="45" height="55" fill="#FEF08A" rx="3"/>
+            <polygon points="-4,25 22,5 49,25" fill="#DC2626"/>
+            <rect x="10" y="40" width="10" height="12" fill="#38BDF8"/>
+            <rect x="26" y="40" width="10" height="12" fill="#38BDF8"/>
+
+            <rect x="52" y="10" width="45" height="70" fill="#FDE68A" rx="3"/>
+            <rect x="62" y="24" width="10" height="10" fill="#FACC15"/>
+            <rect x="78" y="24" width="10" height="10" fill="#FACC15"/>
+            <rect x="62" y="44" width="10" height="10" fill="#FACC15"/>
+          </g>
+
+          <!-- Marcadores numerados 1, 2, 3, 4, 5 -->
+          <g font-weight="bold" font-size="15" text-anchor="middle">
+            <circle cx="62" cy="105" r="16" fill="#FFD60A" stroke="#0F172A" stroke-width="2.5"/>
+            <text x="62" y="110" fill="#0F172A">1</text>
+
+            <circle cx="185" cy="135" r="16" fill="#FFD60A" stroke="#0F172A" stroke-width="2.5"/>
+            <text x="185" y="140" fill="#0F172A">2</text>
+
+            <circle cx="335" cy="65" r="16" fill="#FFD60A" stroke="#0F172A" stroke-width="2.5"/>
+            <text x="335" y="70" fill="#0F172A">3</text>
+
+            <circle cx="476" cy="142" r="16" fill="#FFD60A" stroke="#0F172A" stroke-width="2.5"/>
+            <text x="476" y="147" fill="#0F172A">4</text>
+
+            <circle cx="595" cy="120" r="16" fill="#FFD60A" stroke="#0F172A" stroke-width="2.5"/>
+            <text x="595" y="125" fill="#0F172A">5</text>
+          </g>
+        </svg>
+      `;
+    }
+
+    // =========================================================================
+    // 6. VALIDACIÓN DE RESPUESTAS Y RETROALIMENTACIÓN DE LA MAESTRA
+    // =========================================================================
+    function validateCurrentQuestion() {
+      if (state.tempState.answered) return;
+
+      const lvl = LEVELS_DATA[state.currentLevelIndex];
+      const q = lvl.questions[state.currentQuestionIndex];
+
+      let isCorrect = false;
+      let userAnswerStr = "";
+      let correctAnswerStr = "";
+
+      if (q.type === "mcq") {
+        const chosen = state.tempState.selectedIndex;
+        isCorrect = chosen === q.correctIndex;
+        userAnswerStr = q.options[chosen];
+        correctAnswerStr = q.options[q.correctIndex];
+
+        // Colorear botones MCQ
+        const btns = document.querySelectorAll(".mcq-option");
+        btns.forEach((b, idx) => {
+          b.disabled = true;
+          if (idx === q.correctIndex) {
+            b.classList.remove("bg-slate-50", "border-slate-300");
+            b.classList.add("bg-emerald-100", "border-emerald-600", "ring-2", "ring-emerald-400");
+          } else if (idx === chosen && !isCorrect) {
+            b.classList.remove("bg-slate-50", "border-slate-300");
+            b.classList.add("bg-rose-100", "border-rose-600");
+          }
+        });
+      }
+      else if (q.type === "match") {
+        const conns = state.tempState.connections || {};
+        if (Object.keys(conns).length < q.pairs.length) {
+          showInlineToast("⚠️ ¡Une todas las parejas con flechas antes de comprobar!");
+          return;
+        }
+        let allGood = true;
+        const userPairs = [];
+        q.pairs.forEach((pair, idx) => {
+          const chosenRightId = conns[idx];
+          const chosenRightText = q.pairs[chosenRightId]?.right || "Sin unir";
+          userPairs.push(`${pair.left} → ${chosenRightText}`);
+          if (chosenRightId !== idx) allGood = false;
+        });
+        isCorrect = allGood;
+        userAnswerStr = userPairs.join(" | ");
+        correctAnswerStr = q.pairs.map(p => `${p.left} → ${p.right}`).join(" | ");
+      }
+      else if (q.type === "fill") {
+        const filled = state.tempState.filled || [];
+        if (filled.some(v => !v)) {
+          showInlineToast("⚠️ ¡Rellena todos los huecos del texto antes de comprobar!");
+          return;
+        }
+        isCorrect = q.blanks.every((ans, idx) => ans.toLowerCase() === filled[idx].toLowerCase());
+        userAnswerStr = filled.join(", ");
+        correctAnswerStr = q.blanks.join(", ");
+      }
+      else if (q.type === "schema") {
+        const nodeAns = state.tempState.nodeAnswers || [];
+        if (nodeAns.some(v => !v)) {
+          showInlineToast("⚠️ ¡Completa todos los recuadros del esquema antes de comprobar!");
+          return;
+        }
+        isCorrect = q.nodes.every((n, idx) => n.answer === nodeAns[idx]);
+        userAnswerStr = q.nodes.map((n, idx) => `${n.label}: ${nodeAns[idx]}`).join(" | ");
+        correctAnswerStr = q.nodes.map(n => `${n.label}: ${n.answer}`).join(" | ");
+      }
+      else if (q.type === "order") {
+        const current = state.tempState.currentOrder;
+        isCorrect = current.every((item, idx) => item.correctPos === idx);
+        userAnswerStr = current.map((it, i) => `${i + 1}) ${it.text}`).join(" → ");
+        correctAnswerStr = q.steps.join(" → ");
+      }
+      else if (q.type === "diagram") {
+        const placed = state.tempState.placed || {};
+        if (Object.keys(placed).length < q.targets.length) {
+          showInlineToast("⚠️ ¡Coloca todos los nombres en el dibujo antes de comprobar!");
+          return;
+        }
+        isCorrect = q.targets.every(t => placed[t.id] === t.answer);
+        userAnswerStr = q.targets.map(t => `${t.label}: ${placed[t.id]}`).join(" | ");
+        correctAnswerStr = q.targets.map(t => `${t.label}: ${t.answer}`).join(" | ");
+      }
+
+      state.tempState.answered = true;
+      document.getElementById("btn-submit-answer").classList.add("hidden");
+      document.getElementById("btn-reset-activity").classList.add("hidden");
+
+      // Actualizar puntuación si es la primera vez o recalcular total
+      const earned = isCorrect ? q.points : 0;
+      state.results[q.id] = {
+        questionId: q.id,
+        levelId: lvl.id,
+        levelTitle: lvl.title,
+        prompt: q.prompt,
+        userAnswer: userAnswerStr,
+        correctAnswer: correctAnswerStr,
+        isCorrect,
+        pointsEarned: earned,
+        maxPoints: q.points
+      };
+
+      // Recalcular puntuación total limpia
+      state.score = Object.values(state.results).reduce((acc, r) => acc + r.pointsEarned, 0);
+      updateHUD();
+
+      showTeacherFeedback(isCorrect, earned, q.explanation);
+    }
+
+    function showInlineToast(msg) {
+      const existing = document.getElementById("inline-toast");
+      if (existing) existing.remove();
+
+      const toast = document.createElement("div");
+      toast.id = "inline-toast";
+      toast.className = "mt-3 bg-amber-100 border-2 border-amber-500 text-amber-950 font-bold px-4 py-2.5 rounded-2xl text-sm animate-pop";
+      toast.textContent = msg;
+      document.getElementById("q-action-bar").before(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function showTeacherFeedback(isCorrect, earnedPoints, explanation) {
+      const box = document.getElementById("teacher-feedback-box");
+      const avatarBox = document.getElementById("teacher-avatar-container");
+      const statusPill = document.getElementById("feedback-status-pill");
+      const pointsPill = document.getElementById("feedback-points-pill");
+      const commentEl = document.getElementById("teacher-comment-text");
+      const expEl = document.getElementById("feedback-explanation-text");
+
+      box.classList.remove("hidden", "bg-emerald-50", "border-emerald-400", "bg-rose-50", "border-rose-400");
+
+      if (isCorrect) {
+        box.classList.add("bg-emerald-50", "border-emerald-400");
+        avatarBox.className = "w-20 h-20 shrink-0 rounded-full border-4 border-emerald-500 bg-white shadow-md overflow-hidden flex items-center justify-center";
+        avatarBox.innerHTML = getTeacherSVG(true);
+        statusPill.textContent = "🎉 ¡ACIERTO!";
+        statusPill.className = "font-display font-bold text-sm px-3 py-0.5 rounded-full uppercase bg-emerald-500 text-white";
+        pointsPill.textContent = `+${earnedPoints} puntos`;
+        commentEl.textContent = TEACHER_PRAISES[Math.floor(Math.random() * TEACHER_PRAISES.length)];
+      } else {
+        box.classList.add("bg-rose-50", "border-rose-400");
+        avatarBox.className = "w-20 h-20 shrink-0 rounded-full border-4 border-rose-500 bg-white shadow-md overflow-hidden flex items-center justify-center";
+        avatarBox.innerHTML = getTeacherSVG(false);
+        statusPill.textContent = "😅 ¡FALLO!";
+        statusPill.className = "font-display font-bold text-sm px-3 py-0.5 rounded-full uppercase bg-rose-500 text-white";
+        pointsPill.textContent = "0 puntos";
+        commentEl.textContent = TEACHER_ROASTS[Math.floor(Math.random() * TEACHER_ROASTS.length)];
+      }
+
+      expEl.textContent = `📚 Explicación: ${explanation}`;
+
+      // Ajustar texto del botón siguiente si es la última pregunta del nivel
+      const lvl = LEVELS_DATA[state.currentLevelIndex];
+      const nextBtn = document.getElementById("btn-next-question");
+      if (state.currentQuestionIndex === lvl.questions.length - 1) {
+        nextBtn.innerHTML = `<span>🏁 Completar Nivel ${lvl.id}</span>`;
+      } else {
+        nextBtn.innerHTML = `<span>Siguiente reto</span><span>➡️</span>`;
+      }
+
+      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function getTeacherSVG(happy) {
+      if (happy) {
+        return `
+          <svg viewBox="0 0 120 120" class="w-full h-full">
+            <circle cx="60" cy="60" r="58" fill="#D1FAE5"/>
+            <path d="M25 58 C25 25, 95 25, 95 58 L98 95 C98 102, 22 102, 22 95 Z" fill="#5C3A21"/>
+            <ellipse cx="60" cy="62" rx="26" ry="30" fill="#FDE2C4"/>
+            <rect x="38" y="52" width="18" height="13" rx="5" fill="none" stroke="#059669" stroke-width="3"/>
+            <rect x="64" y="52" width="18" height="13" rx="5" fill="none" stroke="#059669" stroke-width="3"/>
+            <line x1="56" y1="58" x2="64" y2="58" stroke="#059669" stroke-width="3"/>
+            <path d="M43 59 Q47 54 51 59" stroke="#1E293B" stroke-width="2.5" fill="none"/>
+            <path d="M69 59 Q73 54 77 59" stroke="#1E293B" stroke-width="2.5" fill="none"/>
+            <path d="M48 73 Q60 86 72 73" stroke="#E11D48" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M30 115 C32 95, 88 95, 90 115 Z" fill="#10B981"/>
+          </svg>
+        `;
+      }
+      // Cara de susto humorístico con una cana nueva saliendo
+      return `
+        <svg viewBox="0 0 120 120" class="w-full h-full">
+          <circle cx="60" cy="60" r="58" fill="#FFE4E6"/>
+          <path d="M25 58 C25 25, 95 25, 95 58 L98 95 C98 102, 22 102, 22 95 Z" fill="#5C3A21"/>
+          <!-- ¡Nueva cana blanca saltando! -->
+          <path d="M60 28 Q68 12 80 18" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <ellipse cx="60" cy="62" rx="26" ry="30" fill="#FDE2C4"/>
+          <rect x="38" y="52" width="18" height="13" rx="5" fill="none" stroke="#E11D48" stroke-width="3"/>
+          <rect x="64" y="52" width="18" height="13" rx="5" fill="none" stroke="#E11D48" stroke-width="3"/>
+          <line x1="56" y1="58" x2="64" y2="58" stroke="#E11D48" stroke-width="3"/>
+          <circle cx="47" cy="58.5" r="3" fill="#1E293B"/>
+          <circle cx="73" cy="58.5" r="3" fill="#1E293B"/>
+          <ellipse cx="60" cy="77" rx="6" ry="8" fill="#E11D48"/>
+          <path d="M30 115 C32 95, 88 95, 90 115 Z" fill="#F43F5E"/>
+        </svg>
+      `;
+    }
+
+    function nextQuestion() {
+      const lvl = LEVELS_DATA[state.currentLevelIndex];
+      if (state.currentQuestionIndex < lvl.questions.length - 1) {
+        state.currentQuestionIndex++;
+        renderCurrentQuestion();
+      } else {
+        // Marcar nivel como completado
+        if (!state.completedLevels.includes(lvl.id)) {
+          state.completedLevels.push(lvl.id);
+        }
+        // Si ya completó los 5 niveles, ir directo al informe final
+        if (state.completedLevels.length === LEVELS_DATA.length) {
+          showFinalReport();
+        } else {
+          showMapScreen();
+        }
+      }
+    }
+
+    // =========================================================================
+    // 7. INFORME FINAL EN PANTALLA Y GENERACIÓN DE PDF REAL (jsPDF)
+    // =========================================================================
+    function showFinalReport() {
+      hideAllScreens();
+      document.getElementById("hud-level-info").classList.add("invisible");
+      document.getElementById("screen-report").classList.remove("hidden");
+
+      const allResults = Object.values(state.results);
+      const totalQuestionsInCourse = LEVELS_DATA.reduce((acc, l) => acc + l.questions.length, 0);
+      const maxPossiblePoints = LEVELS_DATA.reduce(
+        (acc, l) => acc + l.questions.reduce((s, q) => s + q.points, 0),
+        0
+      );
+
+      const correctCount = allResults.filter(r => r.isCorrect).length;
+      const wrongCount = allResults.filter(r => !r.isCorrect).length;
+      const gradeOver10 = maxPossiblePoints > 0 ? ((state.score / maxPossiblePoints) * 10).toFixed(1) : "0.0";
+
+      document.getElementById("report-student-subtitle").textContent =
+        `Alumno/a: ${state.studentName} · Fecha: ${new Date().toLocaleDateString("es-ES")}`;
+      document.getElementById("rep-total-score").textContent = `${state.score} / ${maxPossiblePoints}`;
+      document.getElementById("rep-correct-count").textContent = `${correctCount} / ${totalQuestionsInCourse}`;
+      document.getElementById("rep-wrong-count").textContent = `${wrongCount}`;
+      document.getElementById("rep-grade").textContent = `${gradeOver10} / 10`;
+
+      // Frase final de la maestra según la nota
+      const quoteEl = document.getElementById("rep-teacher-quote");
+      const numGrade = parseFloat(gradeOver10);
+      if (numGrade >= 8.5) {
+        quoteEl.textContent = `«¡Enhorabuena, ${state.studentName}! Qué pedazo de puntuación. Con alumnos así no me sale ni una sola cana. ¡Estás preparadísimo/a para el examen del Tema 4!»`;
+      } else if (numGrade >= 5) {
+        quoteEl.textContent = `«¡Buen trabajo, ${state.studentName}! Has superado el reto, aunque en algún fallo casi digo "¡Diosito, llévame pronto!". Repasa los fallos marcados en rojo abajo y sacarás notaza.»`;
+      } else {
+        quoteEl.textContent = `«¡Ay, ${state.studentName}, que me van a salir canas de colores! Revisa bien las preguntas marcadas en rojo en este informe y vuelve a jugar los niveles para subir esa nota.»`;
+      }
+
+      // Renderizar lista detallada por niveles
+      const detailsList = document.getElementById("report-details-list");
+      detailsList.innerHTML = "";
+
+      LEVELS_DATA.forEach(lvl => {
+        const lvlBlock = document.createElement("div");
+        lvlBlock.className = "border-2 border-slate-200 rounded-3xl overflow-hidden";
+
+        let rowsHTML = "";
+        lvl.questions.forEach((q, idx) => {
+          const res = state.results[q.id];
+          if (!res) {
+            rowsHTML += `
+              <div class="p-3.5 bg-slate-50 border-t border-slate-200 text-sm text-slate-500 flex justify-between">
+                <span>${idx + 1}. ${q.prompt}</span>
+                <span class="font-bold">Sin responder (0/${q.points} pts)</span>
+              </div>
+            `;
+            return;
+          }
+
+          rowsHTML += `
+            <div class="p-4 border-t border-slate-200 ${res.isCorrect ? "bg-emerald-50/60" : "bg-rose-50/70"}">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                <span class="font-bold text-slate-900 text-sm sm:text-base">${idx + 1}. ${res.prompt}</span>
+                <span class="font-display font-bold text-xs px-3 py-1 rounded-full ${
+                  res.isCorrect ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                }">
+                  ${res.isCorrect ? `✅ Acierto (+${res.pointsEarned} pts)` : `❌ Fallo (0/${res.maxPoints} pts)`}
+                </span>
+              </div>
+              <div class="text-xs sm:text-sm space-y-1 mt-1.5">
+                <div class="${res.isCorrect ? "text-emerald-900" : "text-rose-900"} font-semibold">
+                  <strong>Tu respuesta:</strong> ${res.userAnswer}
+                </div>
+                ${
+                  !res.isCorrect
+                    ? `<div class="text-slate-800 font-semibold"><strong>Respuesta correcta:</strong> ${res.correctAnswer}</div>`
+                    : ""
+                }
+              </div>
+            </div>
+          `;
+        });
+
+        lvlBlock.innerHTML = `
+          <div class="bg-slate-800 text-white px-5 py-3 font-display font-bold text-base sm:text-lg flex items-center justify-between">
+            <span>Nivel ${lvl.id}: ${lvl.title}</span>
+            <span class="text-xs bg-white/20 px-3 py-1 rounded-full">${lvl.questions.length} preguntas</span>
+          </div>
+          <div>${rowsHTML}</div>
+        `;
+        detailsList.appendChild(lvlBlock);
+      });
+    }
+
+    // Generación y descarga directa de PDF usando jsPDF
+    function downloadPDFReport() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        window.print();
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 14;
+      const contentWidth = pageWidth - margin * 2;
+      let y = 16;
+
+      const allResults = Object.values(state.results);
+      const totalQuestions = LEVELS_DATA.reduce((acc, l) => acc + l.questions.length, 0);
+      const maxPoints = LEVELS_DATA.reduce((acc, l) => acc + l.questions.reduce((s, q) => s + q.points, 0), 0);
+      const correctCount = allResults.filter(r => r.isCorrect).length;
+      const wrongCount = allResults.filter(r => !r.isCorrect).length;
+      const gradeOver10 = maxPoints > 0 ? ((state.score / maxPoints) * 10).toFixed(1) : "0.0";
+
+      // Cabecera colorida del PDF
+      doc.setFillColor(79, 70, 229); // Índigo vibrante
+      doc.roundedRect(margin, y, contentWidth, 28, 4, 4, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("INFORME DE REPASO - TEMA 4: LA ENERGIA", margin + 6, y + 10);
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Conocimiento del Medio (Editorial Santillana)", margin + 6, y + 16);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Alumno/a: ${state.studentName}   |   Fecha: ${new Date().toLocaleDateString("es-ES")}`, margin + 6, y + 23);
+
+      y += 34;
+
+      // Cuadro resumen de notas
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(203, 213, 225);
+      doc.roundedRect(margin, y, contentWidth, 18, 3, 3, "FD");
+
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(10);
+      doc.text(`Puntuacion: ${state.score} / ${maxPoints} pts`, margin + 5, y + 7);
+      doc.text(`Nota Final: ${gradeOver10} / 10`, margin + 68, y + 7);
+      doc.setTextColor(5, 150, 105);
+      doc.text(`Aciertos: ${correctCount} de ${totalQuestions}`, margin + 5, y + 14);
+      doc.setTextColor(225, 29, 72);
+      doc.text(`Fallos: ${wrongCount}`, margin + 68, y + 14);
+
+      y += 25;
+
+      // Iterar por niveles y preguntas
+      LEVELS_DATA.forEach(lvl => {
+        if (y > pageHeight - 28) {
+          doc.addPage();
+          y = 16;
+        }
+
+        // Título de nivel
+        doc.setFillColor(30, 41, 59);
+        doc.roundedRect(margin, y, contentWidth, 8, 2, 2, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text(`NIVEL ${lvl.id}: ${lvl.title.toUpperCase()}`, margin + 4, y + 5.5);
+        y += 11;
+
+        lvl.questions.forEach((q, idx) => {
+          const res = state.results[q.id];
+          const statusLabel = !res
+            ? "[SIN RESPONDER]"
+            : res.isCorrect
+            ? `[ACIERTO +${res.pointsEarned} pts]`
+            : `[FALLO 0/${res.maxPoints} pts]`;
+
+          const promptLines = doc.splitTextToSize(`${idx + 1}. ${q.prompt} ${statusLabel}`, contentWidth - 6);
+          const userLines = res
+            ? doc.splitTextToSize(`   Tu respuesta: ${res.userAnswer}`, contentWidth - 8)
+            : [];
+          const correctLines =
+            res && !res.isCorrect
+              ? doc.splitTextToSize(`   Correcta: ${res.correctAnswer}`, contentWidth - 8)
+              : [];
+
+          const blockHeight = (promptLines.length + userLines.length + correctLines.length) * 4.3 + 4;
+
+          if (y + blockHeight > pageHeight - 14) {
+            doc.addPage();
+            y = 16;
+          }
+
+          // Fondo suave según acierto/fallo
+          if (res) {
+            if (res.isCorrect) {
+              doc.setFillColor(236, 253, 245);
+            } else {
+              doc.setFillColor(255, 241, 242);
+            }
+            doc.rect(margin, y - 2, contentWidth, blockHeight, "F");
+          }
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.8);
+          doc.setTextColor(15, 23, 42);
+          doc.text(promptLines, margin + 3, y + 2);
+          y += promptLines.length * 4.3 + 1;
+
+          if (res) {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.3);
+            if (res.isCorrect) {
+              doc.setTextColor(6, 95, 70);
+            } else {
+              doc.setTextColor(159, 18, 57);
+            }
+            doc.text(userLines, margin + 3, y + 1.5);
+            y += userLines.length * 4.3;
+
+            if (!res.isCorrect) {
+              doc.setTextColor(30, 41, 59);
+              doc.setFont("helvetica", "bold");
+              doc.text(correctLines, margin + 3, y + 1.5);
+              y += correctLines.length * 4.3;
+            }
+          }
+
+          y += 3;
+        });
+
+        y += 3;
+      });
+
+      const safeName = state.studentName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, "_");
+      doc.save(`Informe_Energia_Tema4_${safeName}.pdf`);
+    }
+  </script>
+</body>
+</html>
